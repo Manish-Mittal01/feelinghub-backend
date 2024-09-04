@@ -1,8 +1,8 @@
 const firebase = require("firebase-admin");
-const serviceAccount = require("../serviceAccount.json");
+// const serviceAccount = require("../serviceAccount.json");
 
 firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
+  // credential: firebase.credential.cert(serviceAccount),
 });
 
 const sendFirebaseNotification = async (message) => {

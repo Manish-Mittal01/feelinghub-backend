@@ -96,7 +96,7 @@ const getCommentsList = async (req, res) => {
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
 
     const comments = storyReactionsModel
-      .find({ story: storyId })
+      .find({ story: storyId, comment: { $exists: true } })
       .sort({ [orderBy]: order })
       .skip((page - 1) * limit)
       .limit(limit)

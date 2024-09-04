@@ -3,6 +3,7 @@ const { ResponseService } = require("../services/responseService");
 const { storyModel } = require("../Models/storyModel");
 const reportedStoryModel = require("../Models/reportedStoryModel");
 const storyReactionsModel = require("../Models/storyReactionsModel");
+const bookmarkmodel = require("../Models/bookmarkmodel");
 
 module.exports.addStory = async (req, res) => {
   try {
@@ -38,12 +39,14 @@ module.exports.getStoriesList = async (req, res) => {
     }
 
     const stories = await storyModel.aggregate([
-      // Step 1: Lookup and count comments
       {
         $lookup: {
-          from: "comments",
+          from: "storyReactions",
           let: { storyId: "$_id" },
-          pipeline: [{ $match: { $expr: { $eq: ["$story", "$$storyId"] } } }, { $count: "count" }],
+          pipeline: [
+            { $match: { $expr: { $eq: ["$story", "$$storyId"] }, comment: { $exists: true } } },
+            { $count: "count" },
+          ],
           as: "commentsCount",
         },
       },
@@ -53,12 +56,17 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
 
-      // Step 2: Lookup and count reactions
       {
         $lookup: {
-          from: "reactions",
+          from: "storyReactions",
           let: { storyId: "$_id" },
-          pipeline: [{ $match: { $expr: { $eq: ["$story", "$$storyId"] } } }, { $count: "count" }],
+          pipeline: [
+            {
+              $match: { $expr: { $eq: ["$story", "$$storyId"] }, reactionType: { $exists: true } },
+            },
+            { $count: "count" },
+          ],
+
           as: "reactionsCount",
         },
       },
@@ -68,20 +76,6 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
 
-      // Step 3: Add user field based on anonymousSharing
-      {
-        $addFields: {
-          user: {
-            $cond: {
-              if: { $eq: ["$anonymousSharing", false] },
-              then: "$user", // This will be replaced in the next stage if anonymousSharing is false
-              else: "$user", // Keep as it is if anonymousSharing is true
-            },
-          },
-        },
-      },
-
-      // Step 4: Lookup user data if anonymousSharing is false
       {
         $lookup: {
           from: "users",
@@ -96,6 +90,18 @@ module.exports.getStoriesList = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $addFields: {
+          user: {
+            $cond: {
+              if: { $eq: ["$anonymousSharing", false] },
+              then: "$user", // This will be replaced in the next stage if anonymousSharing is false
+              else: "$$REMOVE", // Keep as it is if anonymousSharing is true
+            },
+          },
+        },
+      },
+
       {
         $lookup: {
           from: "categories",
@@ -144,22 +150,39 @@ module.exports.getStoriesList = async (req, res) => {
 module.exports.getStoryDetails = async (req, res) => {
   try {
     const { storyId } = req.body;
+    const { userid } = req.headers;
 
-    const story = await storyModel.findOne({ _id: storyId }).populate("user category").lean();
-    const commentsCount = await storyReactionsModel.countDocuments({
+    let story = storyModel.findOne({ _id: storyId }).populate("user category").lean();
+    let commentsCount = storyReactionsModel.countDocuments({
       story: storyId,
       comment: { $exists: true },
     });
-    const reactionsCount = await storyReactionsModel.countDocuments({
+    let reactionsCount = storyReactionsModel.countDocuments({
       story: storyId,
       reactionType: { $exists: true },
     });
+    let isStoryBookmarked = false;
+    if (userid) {
+      isStoryBookmarked = bookmarkmodel.findOne({
+        story: storyId,
+        user: userid,
+      });
+    }
+
+    [story, commentsCount, reactionsCount, isStoryBookmarked] = await Promise.all([
+      story,
+      commentsCount,
+      reactionsCount,
+      isStoryBookmarked,
+    ]);
+
     if (!story) return ResponseService.success(res, `story not found`, StatusCode.notFound);
 
     return ResponseService.success(res, `story details found successfully`, {
       ...story,
       commentsCount,
       reactionsCount,
+      isBookmarked: isStoryBookmarked ? true : false,
     });
   } catch (error) {
     console.log("api error", error);
