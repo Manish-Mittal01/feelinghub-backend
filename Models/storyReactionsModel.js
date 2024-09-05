@@ -11,4 +11,9 @@ const storyReactionsSchema = Schema(
   { timestamps: true, versionKey: false }
 );
 
+storyReactionsSchema.index({ story: 1 });
+storyReactionsSchema.index({ comment: 1 });
+storyReactionsSchema.index({ user: 1 });
+storyReactionsSchema.index({ reactionType: 1 });
+
 module.exports = model("storyReactions", storyReactionsSchema);

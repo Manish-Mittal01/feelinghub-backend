@@ -38,10 +38,10 @@ module.exports.getStoriesList = async (req, res) => {
       filters.isPrivate = false;
     }
 
-    const stories = await storyModel.aggregate([
+    let stories = storyModel.aggregate([
       {
         $lookup: {
-          from: "storyReactions",
+          from: "storyreactions",
           let: { storyId: "$_id" },
           pipeline: [
             { $match: { $expr: { $eq: ["$story", "$$storyId"] }, comment: { $exists: true } } },
@@ -58,7 +58,7 @@ module.exports.getStoriesList = async (req, res) => {
 
       {
         $lookup: {
-          from: "storyReactions",
+          from: "storyreactions",
           let: { storyId: "$_id" },
           pipeline: [
             {
@@ -79,8 +79,16 @@ module.exports.getStoriesList = async (req, res) => {
       {
         $lookup: {
           from: "users",
-          localField: "user",
-          foreignField: "_id",
+          let: { userId: "$user", showUserDetails: "$anonymousSharing" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$_id", "$$userId"] }, { $eq: ["$$showUserDetails", false] }],
+                },
+              },
+            },
+          ],
           as: "user",
         },
       },
@@ -88,17 +96,6 @@ module.exports.getStoriesList = async (req, res) => {
         $unwind: {
           path: "$user",
           preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          user: {
-            $cond: {
-              if: { $eq: ["$anonymousSharing", false] },
-              then: "$user", // This will be replaced in the next stage if anonymousSharing is false
-              else: "$$REMOVE", // Keep as it is if anonymousSharing is true
-            },
-          },
         },
       },
 
@@ -117,25 +114,15 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
 
-      // Step 5: Apply filters, sorting, and pagination
       { $match: filters },
       { $sort: { [orderBy]: order } },
       { $skip: (page - 1) * limit },
       { $limit: limit },
     ]);
 
-    // const stories = await storyModel
-    //   .find(filters)
-    //   .sort({ [orderBy]: order })
-    //   .skip((page - 1) * limit)
-    //   .limit(limit)
-    //   .populate({
-    //     path: "user",
-    //     select: "_id name mobile email",
-    //   })
-    //   .lean();
+    let totalCount = storyModel.countDocuments(filters);
 
-    const totalCount = await storyModel.countDocuments(filters);
+    [stories, totalCount] = await Promise.all([stories, totalCount]);
 
     return ResponseService.success(res, `story list found successfully`, {
       records: stories,

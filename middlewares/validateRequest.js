@@ -226,6 +226,7 @@ module.exports = {
 
     addCommentReplySchema: Joi.object()
       .keys({
+        storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
         commentId: Joi.string().custom(validateMongoId, "commentId validation").required(),
         reply: Joi.string().min(10).max(850).required(),
       })

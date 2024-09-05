@@ -4,6 +4,7 @@ const storyReactionsModel = require("../Models/storyReactionsModel");
 const { StatusCode } = require("../utils/constants");
 const { ResponseService } = require("../services/responseService");
 const { sendFirebaseNotification } = require("../firebase/pushNotification");
+const { Types } = require("mongoose");
 
 const manageStoryReaction = async (req, res) => {
   try {
@@ -95,14 +96,119 @@ const getCommentsList = async (req, res) => {
     const isStoryExist = await storyModel.findOne({ _id: storyId });
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
 
-    const comments = storyReactionsModel
-      .find({ story: storyId, comment: { $exists: true } })
-      .sort({ [orderBy]: order })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    let comments = storyReactionsModel.aggregate([
+      { $match: { story: Types.ObjectId(storyId), comment: { $exists: true } } },
 
-    return ResponseService.success(res, "Comments list found", comments);
+      {
+        $lookup: {
+          from: "commentreactions",
+          let: { commentId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$comment", "$$commentId"] }, reply: { $exists: true } } },
+            { $count: "count" },
+          ],
+          as: "repliesCount",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "storyreactions",
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$reactionType", "like"] },
+              },
+            },
+            { $count: "count" },
+          ],
+
+          as: "likesCount",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "storyreactions",
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$reactionType", "dislike"] },
+              },
+            },
+            { $count: "count" },
+          ],
+
+          as: "dislikesCount",
+        },
+      },
+      {
+        $addFields: {
+          repliesCount: { $ifNull: [{ $arrayElemAt: ["$repliesCount.count", 0] }, 0] },
+          likesCount: { $ifNull: [{ $arrayElemAt: ["$likesCount.count", 0] }, 0] },
+          dislikesCount: { $ifNull: [{ $arrayElemAt: ["$dislikesCount.count", 0] }, 0] },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "commentreactions",
+          let: { commentId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$comment", "$$commentId"] }, reply: { $exists: true } } },
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                pipeline: [{ $project: { name: 1, avatar: 1, gender: 1 } }],
+                as: "user",
+              },
+            },
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 3 },
+          ],
+          as: "replies",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          pipeline: [{ $project: { name: 1, avatar: 1, gender: 1 } }],
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      { $sort: { [orderBy]: order } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]);
+
+    let totalCount = storyReactionsModel.countDocuments({
+      story: storyId,
+      comment: { $exists: true },
+    });
+
+    [comments, totalCount] = await Promise.all([comments, totalCount]);
+
+    return ResponseService.success(res, "Comments list found", { records: comments, totalCount });
   } catch (error) {
     console.log("error", error);
     return ResponseService.serverError(res, error);
