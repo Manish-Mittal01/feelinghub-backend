@@ -12,10 +12,11 @@ const {
   storyResponseTypes,
   queryReasons,
   queryStatus,
+  storyReportReasons,
 } = require("../utils/constants");
 
 const validateMongoId = (value, helpers) => {
-  if (value && Types.ObjectId.isValid(value)) return value;
+  if (value && Types.ObjectId.isValid(value)) return Types.ObjectId(value);
   return helpers.message(`Invalid ${helpers.state?.path[0]}`);
 };
 
@@ -49,6 +50,10 @@ const addCategorySchemaKeys = {
   iconFilled: Joi.string().required(),
 };
 
+const emailSchemaKey = {
+  email: Joi.string().email().required().lowercase(),
+};
+
 module.exports = {
   commonSchema: {
     paginationSchema: Joi.object()
@@ -61,6 +66,7 @@ module.exports = {
   authSchemas: {
     registrationSchema: Joi.object()
       .keys({
+        ...emailSchemaKey,
         name: Joi.string()
           .pattern(/^[a-zA-Z0-9 ]+$/)
           .messages({
@@ -69,7 +75,6 @@ module.exports = {
           .min(3)
           .max(30)
           .required(),
-        email: Joi.string().email().required(),
         mobile: Joi.string().required().custom(validateMobile, "Mobile validation").required(),
         password: Joi.string()
           .pattern(new RegExp(passwordRegex))
@@ -89,13 +94,13 @@ module.exports = {
 
     emailSchema: Joi.object()
       .keys({
-        email: Joi.string().email().required(),
+        ...emailSchemaKey,
       })
       .unknown(true),
 
     EmailVerificationSchema: Joi.object()
       .keys({
-        email: Joi.string().email().required(),
+        ...emailSchemaKey,
         otp: Joi.string()
           .regex(/^[0-9]/)
           .messages({ "string.pattern.base": `Invalid Otp` })
@@ -107,7 +112,7 @@ module.exports = {
 
     loginSchema: Joi.object()
       .keys({
-        email: Joi.string().email().required(),
+        ...emailSchemaKey,
         password: Joi.string()
           .pattern(new RegExp(passwordRegex))
           .messages({
@@ -119,7 +124,7 @@ module.exports = {
 
     passwordResetSchema: Joi.object()
       .keys({
-        email: Joi.string().email().required(),
+        ...emailSchemaKey,
         otp: Joi.string()
           .regex(/^[0-9]/)
           .messages({ "string.pattern.base": `Invalid Otp` })
@@ -189,7 +194,10 @@ module.exports = {
     reportStorySchema: Joi.object()
       .keys({
         storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
-        reason: Joi.string().min(12).max(240).required(),
+        reason: Joi.string()
+          .valid(...storyReportReasons)
+          .required(),
+        description: Joi.string().min(15).max(500).required(),
       })
       .unknown(true),
   },
@@ -251,6 +259,7 @@ module.exports = {
   querySchema: {
     addQuerySchema: Joi.object()
       .keys({
+        ...emailSchemaKey,
         name: Joi.string()
           .min(3)
           .max(30)
@@ -259,7 +268,6 @@ module.exports = {
             "string.pattern.base": `Name can have only alphabets and numbers`,
           })
           .required(),
-        email: Joi.string().email().required(),
         mobile: Joi.string().custom(validateMobile, "Mobile  validation").required(),
         reason: Joi.string()
           .valid(...queryReasons)
@@ -316,7 +324,9 @@ module.exports = {
   validateRequest: (schema) => {
     return (req, res, next) => {
       try {
-        const result = schema.validate(req.body);
+        const result = schema.validate(req.body, {
+          stripUnknown: true,
+        });
 
         if (result.error) {
           return ResponseService.failed(

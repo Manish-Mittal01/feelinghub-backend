@@ -24,6 +24,7 @@ module.exports = {
     "reportIllegalOrInappropriateContent",
   ],
   queryStatus: ["active", "closed", "resolved"],
+  storyReportReasons: ["abusive", "askForMoney", "violence", "hateSpeech", "falseInformation"],
 };
 
 module.exports.getMonth = {

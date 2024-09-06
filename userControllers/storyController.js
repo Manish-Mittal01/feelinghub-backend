@@ -4,6 +4,7 @@ const { storyModel } = require("../Models/storyModel");
 const reportedStoryModel = require("../Models/reportedStoryModel");
 const storyReactionsModel = require("../Models/storyReactionsModel");
 const bookmarkmodel = require("../Models/bookmarkmodel");
+const { Types } = require("mongoose");
 
 module.exports.addStory = async (req, res) => {
   try {
@@ -25,6 +26,7 @@ module.exports.addStory = async (req, res) => {
 module.exports.getStoriesList = async (req, res) => {
   try {
     const { page, limit, order, orderBy, listType } = req.body;
+    const { userid } = req.headers;
 
     const filters = {};
     const filterValues = ["status", "category"];
@@ -39,22 +41,18 @@ module.exports.getStoriesList = async (req, res) => {
     }
 
     let stories = storyModel.aggregate([
-      {
-        $lookup: {
-          from: "storyreactions",
-          let: { storyId: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$story", "$$storyId"] }, comment: { $exists: true } } },
-            { $count: "count" },
-          ],
-          as: "commentsCount",
-        },
-      },
-      {
-        $addFields: {
-          commentsCount: { $ifNull: [{ $arrayElemAt: ["$commentsCount.count", 0] }, 0] },
-        },
-      },
+      { $match: filters },
+      // {
+      //   $lookup: {
+      //     from: "storyreactions",
+      //     let: { storyId: "$_id" },
+      //     pipeline: [
+      //       { $match: { $expr: { $eq: ["$story", "$$storyId"] }, comment: { $exists: true } } },
+      //       { $count: "count" },
+      //     ],
+      //     as: "commentsCount",
+      //   },
+      // },
 
       {
         $lookup: {
@@ -70,9 +68,56 @@ module.exports.getStoriesList = async (req, res) => {
           as: "reactionsCount",
         },
       },
+
+      {
+        $lookup: {
+          from: "storyreactions",
+          let: { storyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$story", "$$storyId"] },
+                    { $eq: ["$user", Types.ObjectId(userid)] },
+                  ],
+                },
+                reactionType: { $exists: true },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "myReaction",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "bookmarks",
+          let: { storyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$story", "$$storyId"] },
+                    { $eq: ["$user", Types.ObjectId(userid)] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "isBookmarked",
+        },
+      },
+
       {
         $addFields: {
           reactionsCount: { $ifNull: [{ $arrayElemAt: ["$reactionsCount.count", 0] }, 0] },
+          // commentsCount: { $ifNull: [{ $arrayElemAt: ["$commentsCount.count", 0] }, 0] },
+          isBookmarked: { $ifNull: [{ $arrayElemAt: ["$isBookmarked", 0] }, false] },
+          myReaction: { $ifNull: [{ $arrayElemAt: ["$myReaction.reactionType", 0] }, null] },
         },
       },
 
@@ -88,6 +133,7 @@ module.exports.getStoriesList = async (req, res) => {
                 },
               },
             },
+            { $project: { name: 1, avatar: 1, gender: 1 } },
           ],
           as: "user",
         },
@@ -114,7 +160,6 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
 
-      { $match: filters },
       { $sort: { [orderBy]: order } },
       { $skip: (page - 1) * limit },
       { $limit: limit },
@@ -149,18 +194,25 @@ module.exports.getStoryDetails = async (req, res) => {
       reactionType: { $exists: true },
     });
     let isStoryBookmarked = false;
+    let myReaction = "";
     if (userid) {
       isStoryBookmarked = bookmarkmodel.findOne({
         story: storyId,
         user: userid,
       });
+      myReaction = storyReactionsModel.findOne({
+        story: storyId,
+        user: userid,
+        reactionType: { $exists: true },
+      });
     }
 
-    [story, commentsCount, reactionsCount, isStoryBookmarked] = await Promise.all([
+    [story, commentsCount, reactionsCount, isStoryBookmarked, myReaction] = await Promise.all([
       story,
       commentsCount,
       reactionsCount,
       isStoryBookmarked,
+      myReaction,
     ]);
 
     if (!story) return ResponseService.success(res, `story not found`, StatusCode.notFound);
@@ -170,6 +222,7 @@ module.exports.getStoryDetails = async (req, res) => {
       commentsCount,
       reactionsCount,
       isBookmarked: isStoryBookmarked ? true : false,
+      storyReaction: myReaction,
     });
   } catch (error) {
     console.log("api error", error);
@@ -211,7 +264,7 @@ module.exports.deleteStory = async (req, res) => {
 
 module.exports.reportStory = async (req, res) => {
   try {
-    let { storyId, userId, reason } = req.body;
+    let { storyId, userId, reason, description } = req.body;
 
     const isStoryExist = await storyModel.findOne({ _id: storyId }).lean();
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
@@ -226,7 +279,7 @@ module.exports.reportStory = async (req, res) => {
         StatusCode.success
       );
 
-    const myReport = { story: storyId, reporter: userId, reason };
+    const myReport = { story: storyId, reporter: userId, reason, description };
     const newReport = new reportedStoryModel(myReport);
     const result = await newReport.save();
 

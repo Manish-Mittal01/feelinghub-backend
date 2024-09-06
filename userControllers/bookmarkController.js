@@ -25,7 +25,7 @@ module.exports.manageBookmark = async (req, res) => {
     return ResponseService.success(res, `bookmark updated successfully`, result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.srevrError(res, error);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -50,6 +50,6 @@ module.exports.getBookmarkList = async (req, res) => {
     return ResponseService.success(res, "Bookmark list found", response);
   } catch (error) {
     console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    return ResponseService.serverError(res, error);
   }
 };

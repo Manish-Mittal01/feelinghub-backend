@@ -1,4 +1,5 @@
 const { Schema, model, Types } = require("mongoose");
+const { storyReportReasons } = require("../utils/constants");
 
 const reportedStoriesSchema = Schema(
   {
@@ -12,7 +13,8 @@ const reportedStoriesSchema = Schema(
       ref: "users",
       required: true,
     },
-    reason: { type: String, required: true },
+    reason: { type: String, required: true, enum: storyReportReasons },
+    description: { type: String, required: true },
   },
   { timestamps: true, versionKey: false }
 );

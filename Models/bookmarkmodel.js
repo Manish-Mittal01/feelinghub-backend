@@ -16,4 +16,7 @@ const bookmarkSchema = Schema(
   { timestamps: true, versionKey: false }
 );
 
+bookmarkSchema.index({ story: 1 });
+bookmarkSchema.index({ user: 1 });
+
 module.exports = model("bookmarks", bookmarkSchema);
