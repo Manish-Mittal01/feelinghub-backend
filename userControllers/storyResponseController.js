@@ -92,6 +92,8 @@ const addStoryComment = async (req, res) => {
 const getCommentsList = async (req, res) => {
   try {
     const { orderBy, order, limit, page, storyId } = req.body;
+    let { userid } = req.headers;
+    userid = userid ? Types.ObjectId(userid) : "";
 
     const isStoryExist = await storyModel.findOne({ _id: storyId });
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
@@ -113,7 +115,7 @@ const getCommentsList = async (req, res) => {
 
       {
         $lookup: {
-          from: "storyreactions",
+          from: "commentreactions",
           let: { commentId: "$_id" },
           pipeline: [
             {
@@ -130,25 +132,27 @@ const getCommentsList = async (req, res) => {
 
       {
         $lookup: {
-          from: "storyreactions",
+          from: "commentreactions",
           let: { commentId: "$_id" },
           pipeline: [
             {
               $match: {
-                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$reactionType", "dislike"] },
+                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$user", userid] },
+                reactionType: { $exists: true },
               },
             },
-            { $count: "count" },
+            { $limit: 1 },
           ],
 
-          as: "dislikesCount",
+          as: "myReaction",
         },
       },
+
       {
         $addFields: {
           repliesCount: { $ifNull: [{ $arrayElemAt: ["$repliesCount.count", 0] }, 0] },
           likesCount: { $ifNull: [{ $arrayElemAt: ["$likesCount.count", 0] }, 0] },
-          dislikesCount: { $ifNull: [{ $arrayElemAt: ["$dislikesCount.count", 0] }, 0] },
+          myReaction: { $ifNull: [{ $arrayElemAt: ["$myReaction.reactionType", 0] }, null] },
         },
       },
 
@@ -217,7 +221,7 @@ const getCommentsList = async (req, res) => {
 
 const addCommentReply = async (req, res) => {
   try {
-    const { storyId, commentId, reply, userId } = req.body;
+    const { commentId, reply, userId } = req.body;
 
     const isCommentExist = await storyReactionsModel.findOne({
       _id: commentId,
@@ -227,7 +231,7 @@ const addCommentReply = async (req, res) => {
       return ResponseService.failed(res, "Comment not found", StatusCode.notFound);
     }
 
-    const myReply = { story: storyId, comment: commentId, user: userId, reply };
+    const myReply = { comment: commentId, user: userId, reply };
     const newReply = new commentReactionsModel(myReply);
     const result = await newReply.save();
 
@@ -257,7 +261,7 @@ const getRepliesList = async (req, res) => {
       .sort({ [orderBy]: order })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate("user")
+      .populate("user", "name gender avatar")
       .lean();
 
     const repliesCount = await commentReactionsModel.countDocuments({
@@ -266,7 +270,7 @@ const getRepliesList = async (req, res) => {
     });
 
     const response = {
-      items: repliesList || [],
+      records: repliesList || [],
       totalCount: repliesCount,
     };
 
@@ -279,7 +283,7 @@ const getRepliesList = async (req, res) => {
 
 const manageCommentReaction = async (req, res) => {
   try {
-    const { storyId, commentId, reaction, userId } = req.body;
+    const { commentId, reaction, userId } = req.body;
 
     const isCommentExist = await storyReactionsModel.findOne({
       _id: commentId,
@@ -288,11 +292,24 @@ const manageCommentReaction = async (req, res) => {
     if (!isCommentExist)
       return ResponseService.failed(res, "Comment not found", StatusCode.notFound);
 
-    const result = await commentReactionsModel.updateOne(
-      { stroy: storyId, comment: commentId, user: userId, reactionType: { $exists: true } },
-      { $set: { reactionType: reaction } },
-      { upsert: true }
-    );
+    const isReactionExist = await commentReactionsModel.exists({
+      comment: commentId,
+      user: userId,
+      reactionType: { $exists: true },
+    });
+
+    let result = {};
+    if (isReactionExist) {
+      result = await commentReactionsModel.deleteOne({
+        comment: commentId,
+        user: userId,
+        reactionType: { $exists: true },
+      });
+    } else {
+      const myReaction = { comment: commentId, reactionType: reaction, user: userId };
+      const newReaction = new commentReactionsModel(myReaction);
+      result = await newReaction.save();
+    }
 
     return ResponseService.success(res, "Reaction added", result);
   } catch (error) {

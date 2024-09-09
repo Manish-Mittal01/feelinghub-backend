@@ -68,13 +68,13 @@ router
     storyResponseController.addCommentReply
   );
 router
-  .route("/story/comment/reply/list")
+  .route("/story/comment/replies/list")
   .post(
     validateRequest(storyResponseSchemas.repliesListSchema),
     storyResponseController.getRepliesList
   );
 router
-  .route("/story/comment/reply/reaction")
+  .route("/story/comment/reaction/add")
   .post(
     authCheck,
     validateRequest(storyResponseSchemas.commentReactionSchema),

@@ -26,7 +26,8 @@ module.exports.addStory = async (req, res) => {
 module.exports.getStoriesList = async (req, res) => {
   try {
     const { page, limit, order, orderBy, listType } = req.body;
-    const { userid } = req.headers;
+    let { userid } = req.headers;
+    userid = userid ? Types.ObjectId(userid) : "";
 
     const filters = {};
     const filterValues = ["status", "category"];
@@ -77,10 +78,7 @@ module.exports.getStoriesList = async (req, res) => {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ["$story", "$$storyId"] },
-                    { $eq: ["$user", Types.ObjectId(userid)] },
-                  ],
+                  $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
                 },
                 reactionType: { $exists: true },
               },
@@ -99,10 +97,7 @@ module.exports.getStoriesList = async (req, res) => {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ["$story", "$$storyId"] },
-                    { $eq: ["$user", Types.ObjectId(userid)] },
-                  ],
+                  $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
                 },
               },
             },
@@ -196,15 +191,19 @@ module.exports.getStoryDetails = async (req, res) => {
     let isStoryBookmarked = false;
     let myReaction = "";
     if (userid) {
-      isStoryBookmarked = bookmarkmodel.findOne({
-        story: storyId,
-        user: userid,
-      });
-      myReaction = storyReactionsModel.findOne({
-        story: storyId,
-        user: userid,
-        reactionType: { $exists: true },
-      });
+      isStoryBookmarked = bookmarkmodel
+        .exists({
+          story: storyId,
+          user: userid,
+        })
+        .lean();
+      myReaction = storyReactionsModel
+        .findOne({
+          story: storyId,
+          user: userid,
+          reactionType: { $exists: true },
+        })
+        .lean();
     }
 
     [story, commentsCount, reactionsCount, isStoryBookmarked, myReaction] = await Promise.all([
@@ -222,7 +221,7 @@ module.exports.getStoryDetails = async (req, res) => {
       commentsCount,
       reactionsCount,
       isBookmarked: isStoryBookmarked ? true : false,
-      storyReaction: myReaction,
+      myReaction: myReaction?.reactionType || "",
     });
   } catch (error) {
     console.log("api error", error);

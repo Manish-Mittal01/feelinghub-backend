@@ -234,7 +234,6 @@ module.exports = {
 
     addCommentReplySchema: Joi.object()
       .keys({
-        storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
         commentId: Joi.string().custom(validateMongoId, "commentId validation").required(),
         reply: Joi.string().min(10).max(850).required(),
       })
@@ -249,9 +248,8 @@ module.exports = {
 
     commentReactionSchema: Joi.object()
       .keys({
-        storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
         commentId: Joi.string().custom(validateMongoId, "commentId validation").required(),
-        reaction: Joi.string().valid("like, dislike").required(),
+        reaction: Joi.string().valid("like", "dislike").required(),
       })
       .unknown(true),
   },
