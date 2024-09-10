@@ -1,15 +1,16 @@
-const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
-const { ResponseService } = require("../services/responseService");
-const { StatusCode, mailSender, webHomePage } = require("../utils/constants");
-const { sendEmail } = require("../services/send-email");
+const { getStorage, ref, deleteObject } = require("firebase/storage");
+const UserModel = require("../Models/UserModel");
 const otpModel = require("../Models/otpModel");
+const { StatusCode, mailSender, webHomePage, webName } = require("../utils/constants");
+const { sendEmail } = require("../services/send-email");
+const { ResponseService } = require("../services/responseService");
 
 const register = async (req, res) => {
   try {
-    const { name, email, mobile, password, gender = "", birth_date = "", avatar = "" } = req.body;
+    const { name, email, mobile, password, gender = "", birth_date = "", avatar = {} } = req.body;
 
-    const userExist = await UserModel.findOne({ email });
+    const userExist = await UserModel.findOne({ $or: [{ email }, { mobile }] });
 
     if (userExist && userExist.status === "active")
       return ResponseService.failed(res, "User already exist", StatusCode.forbidden);
@@ -31,14 +32,14 @@ const register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(8);
     const encryptPassword = await bcrypt.hash(password, salt);
-    const user = new UserModel({ ...req.body });
+    const user = new UserModel({ ...req.body, avatar: avatar || {} });
     user.password = encryptPassword;
 
     let result = {};
     if (userExist && userExist.status === "inactive") {
       result = await UserModel.updateOne(
         { email },
-        { name, mobile, password: encryptPassword, gender, birth_date, avatar }
+        { name, mobile, password: encryptPassword, gender, birth_date, avatar: avatar || {} }
       );
     } else {
       result = await user.save();
@@ -127,9 +128,13 @@ const login = async (req, res) => {
 
     if (user.email === email && isPasswordCorrect) {
       const token = user.generateJWT(user);
+
       const result = await UserModel.updateOne(
         { email },
-        { $push: { accessToken: token, firebaseToken: firebaseToken } }
+        {
+          $push: { accessToken: token },
+          $addToSet: { firebaseToken: firebaseToken },
+        }
       );
       return ResponseService.success(res, "Login Successfull!!", { token, userId: user._id });
     } else {
@@ -223,11 +228,26 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { name = "", mobile = "", gender = "", birth_date = "", avatar = "", userId } = req.body;
+    const {
+      name,
+      mobile,
+      gender,
+      birth_date,
+      address,
+      avatar = {},
+      userId,
+      userDetails,
+    } = req.body;
+
+    if (userDetails.avatar?.name) {
+      const storage = getStorage();
+      const desertRef = ref(storage, `${webName}/${userDetails.avatar?.name}`);
+      const deleteOldImage = await deleteObject(desertRef);
+    }
 
     const result = await UserModel.updateOne(
       { _id: userId },
-      { name, mobile, gender, birth_date, avatar }
+      { name, mobile, gender, birth_date, avatar: avatar || {}, address }
     );
 
     return ResponseService.success(res, "User updated successfully", result);

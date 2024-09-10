@@ -20,7 +20,7 @@ router
   .route("/updateProfile")
   .post(
     authCheck,
-    validateRequest(authSchemas.registrationSchema),
+    validateRequest(authSchemas.updateProfileSchema),
     authController.updateUserProfile
   );
 router

@@ -31,7 +31,11 @@ const userSchema = Schema(
       type: String,
     },
     avatar: {
-      type: String,
+      type: {
+        url: String,
+        name: String,
+      },
+      default: {},
     },
     accessToken: {
       type: [String],

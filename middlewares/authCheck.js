@@ -22,7 +22,10 @@ module.exports.authCheck = async (req, res, next) => {
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
     }
 
-    const existingUser = await UserModel.findOne({ _id: user._id }).lean();
+    const existingUser = await UserModel.findOne(
+      { _id: user._id },
+      "status accessToken avatar"
+    ).lean();
 
     if (!existingUser) return ResponseService.failed(res, "User not found", StatusCode.notFound);
     if (existingUser && existingUser.status === "inactive")

@@ -6,6 +6,7 @@ const firebaseConfig = {
   messagingSenderId: "796834940165",
   appId: "1:796834940165:web:e8a04ec2f9cf9b1d2ce36c",
   measurementId: "G-KT4RZ4BCN1",
+  storageBucket: "gs://feelinghub-46bd1.appspot.com",
 };
 
 const firebaseServiceAccount = {

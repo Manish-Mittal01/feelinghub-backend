@@ -20,24 +20,25 @@ const storage = getStorage(firebaseApp);
 module.exports.uploadFiles = async (req, res) => {
   try {
     const files = req.file ? [req.file] : req.files;
-    let downloadURLs = [];
-
-    // if (err.code === 'LIMIT_FILE_SIZE') {
-    //   return res.status(413).send('File too large');
-    // }
     if (!files) return ResponseService.failed(res, "images not found", StatusCode.notFound);
 
+    let downloadURLs = [];
+
     for (let file of files) {
-      if (file.mimetype.split("/")[0] !== "image")
+      if (!file.mimetype?.includes("image"))
         return ResponseService.failed(res, "Only images are allowed", StatusCode.badRequest);
-      const storageRef = ref(storage, `${webName}/${file.originalname}/${Date.now()}`);
+
+      const fileExtension = file.mimetype.split("/")?.[1] || "jpg";
+      const fileName = `${Date.now()}.${fileExtension}`;
+
+      const storageRef = ref(storage, `${webName}/${fileName}`);
       const metaData = {
         contentType: file.mimetype,
       };
       const snapShot = await uploadBytesResumable(storageRef, file.buffer, metaData);
       const downloadURL = await getDownloadURL(snapShot.ref);
       // const downloadURL = `${process.env.HOST}/images/${file.filename}`;
-      downloadURLs.push({ url: downloadURL, type: file.mimetype, filename: file.filename });
+      downloadURLs.push({ url: downloadURL, type: file.mimetype, filename: fileName });
     }
 
     const responseData = [...downloadURLs];

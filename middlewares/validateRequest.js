@@ -88,7 +88,13 @@ module.exports = {
         birth_date: Joi.string().pattern(new RegExp(dateRegex)).messages({
           "string.pattern.base": `date format should be YYYY-MM-DD`,
         }),
-        avatar: Joi.string().uri(),
+        avatar: Joi.alternatives().try(
+          Joi.object({
+            url: Joi.string().uri().required(),
+            name: Joi.string().required(),
+          }),
+          Joi.string().allow("")
+        ),
       })
       .unknown(true),
 
@@ -137,6 +143,36 @@ module.exports = {
             "string.pattern.base": `The password needs to be at least eight characters long and contain capital, lowercase, numbers, and special characters.`,
           })
           .required(),
+      })
+      .unknown(true),
+
+    updateProfileSchema: Joi.object()
+      .keys({
+        name: Joi.string()
+          .pattern(/^[a-zA-Z0-9 ]+$/)
+          .messages({
+            "string.pattern.base": `Name can have only alphabets and numbers`,
+          })
+          .min(3)
+          .max(30)
+          .required(),
+        mobile: Joi.string().required().custom(validateMobile, "Mobile validation").required(),
+        status: Joi.string().valid(...userStatus),
+        gender: Joi.string().valid("male", "female").required(),
+        address: Joi.string().required(),
+        birth_date: Joi.string()
+          .pattern(new RegExp(dateRegex))
+          .messages({
+            "string.pattern.base": `date format should be YYYY-MM-DD`,
+          })
+          .required(),
+        avatar: Joi.alternatives().try(
+          Joi.object({
+            url: Joi.string().uri().required(),
+            name: Joi.string().required(),
+          }),
+          Joi.string().allow("")
+        ),
       })
       .unknown(true),
 
