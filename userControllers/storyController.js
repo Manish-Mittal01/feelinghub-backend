@@ -27,12 +27,12 @@ module.exports.getStoriesList = async (req, res) => {
   try {
     const { page, limit, order, orderBy, listType } = req.body;
     let { userid } = req.headers;
-    userid = userid ? Types.ObjectId(userid) : "";
+    userid = userid ? Types.ObjectId(userid) : null;
 
     const filters = {};
-    const filterValues = ["status", "category"];
+    const filterValues = ["status", "category", "isPrivate"];
     for (let filterKey of filterValues) {
-      if (req.body[filterKey]) {
+      if (req.body[filterKey]?.toString()) {
         filters[filterKey] = req.body[filterKey];
       }
     }
@@ -41,20 +41,8 @@ module.exports.getStoriesList = async (req, res) => {
       filters.isPrivate = false;
     }
 
-    let stories = storyModel.aggregate([
+    const storiesListPipeline = [
       { $match: filters },
-      // {
-      //   $lookup: {
-      //     from: "storyreactions",
-      //     let: { storyId: "$_id" },
-      //     pipeline: [
-      //       { $match: { $expr: { $eq: ["$story", "$$storyId"] }, comment: { $exists: true } } },
-      //       { $count: "count" },
-      //     ],
-      //     as: "commentsCount",
-      //   },
-      // },
-
       {
         $lookup: {
           from: "storyreactions",
@@ -71,48 +59,8 @@ module.exports.getStoriesList = async (req, res) => {
       },
 
       {
-        $lookup: {
-          from: "storyreactions",
-          let: { storyId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
-                },
-                reactionType: { $exists: true },
-              },
-            },
-            { $limit: 1 },
-          ],
-          as: "myReaction",
-        },
-      },
-
-      {
-        $lookup: {
-          from: "bookmarks",
-          let: { storyId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
-                },
-              },
-            },
-            { $limit: 1 },
-          ],
-          as: "isBookmarked",
-        },
-      },
-
-      {
         $addFields: {
           reactionsCount: { $ifNull: [{ $arrayElemAt: ["$reactionsCount.count", 0] }, 0] },
-          // commentsCount: { $ifNull: [{ $arrayElemAt: ["$commentsCount.count", 0] }, 0] },
-          isBookmarked: { $ifNull: [{ $arrayElemAt: ["$isBookmarked", 0] }, false] },
-          myReaction: { $ifNull: [{ $arrayElemAt: ["$myReaction.reactionType", 0] }, null] },
         },
       },
 
@@ -158,8 +106,58 @@ module.exports.getStoriesList = async (req, res) => {
       { $sort: { [orderBy]: order } },
       { $skip: (page - 1) * limit },
       { $limit: limit },
-    ]);
+    ];
 
+    if (listType === "main") {
+      storiesListPipeline.splice(
+        2,
+        0,
+        {
+          $lookup: {
+            from: "storyreactions",
+            let: { storyId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
+                  },
+                  reactionType: { $exists: true },
+                },
+              },
+              { $limit: 1 },
+            ],
+            as: "myReaction",
+          },
+        },
+
+        {
+          $lookup: {
+            from: "bookmarks",
+            let: { storyId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userid] }],
+                  },
+                },
+              },
+              { $limit: 1 },
+            ],
+            as: "isBookmarked",
+          },
+        },
+        {
+          $addFields: {
+            isBookmarked: { $ifNull: [{ $arrayElemAt: ["$isBookmarked", 0] }, false] },
+            myReaction: { $ifNull: [{ $arrayElemAt: ["$myReaction.reactionType", 0] }, null] },
+          },
+        }
+      );
+    }
+
+    let stories = storyModel.aggregate(storiesListPipeline);
     let totalCount = storyModel.countDocuments(filters);
 
     [stories, totalCount] = await Promise.all([stories, totalCount]);

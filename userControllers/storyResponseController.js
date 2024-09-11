@@ -47,14 +47,25 @@ const getReactionsList = async (req, res) => {
     const isStoryExist = await storyModel.findOne({ _id: storyId });
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
 
-    const responses = storyReactionsModel
-      .find({ story: storyId })
+    let responses = storyReactionsModel
+      .find({ story: storyId, reactionType: { $exists: true } })
       .sort({ [orderBy]: order })
       .skip((page - 1) * limit)
       .limit(limit)
+      .populate("user", "name avatar gender")
       .lean();
 
-    return ResponseService.success(res, "Reaction list found", responses);
+    let responseCount = storyReactionsModel.countDocuments({
+      story: storyId,
+      reactionType: { $exists: true },
+    });
+
+    [responses, responseCount] = await Promise.all([responses, responseCount]);
+
+    return ResponseService.success(res, "Reaction list found", {
+      records: responses,
+      totalCount: responseCount,
+    });
   } catch (error) {
     console.log("error", error);
     return ResponseService.serverError(res, error);
