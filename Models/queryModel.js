@@ -24,9 +24,6 @@ const querySchema = Schema(
       type: String,
       required: true,
     },
-    file: {
-      type: String,
-    },
     status: {
       type: String,
       enum: queryStatus,

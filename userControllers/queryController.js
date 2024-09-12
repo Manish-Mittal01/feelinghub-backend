@@ -39,3 +39,29 @@ module.exports.updateQuery = async (req, res) => {
     return ResponseService.serverError(res, error);
   }
 };
+
+module.exports.queriesList = async (req, res) => {
+  try {
+    const { status, userDetails } = req.body;
+
+    const filterObj = {};
+    if (status) {
+      filterObj.status = status;
+    }
+    if (userDetails) {
+      filterObj.email = userDetails.email;
+    }
+
+    const result = await queryModel.find(filterObj);
+    const totalCount = await queryModel.countDocuments(filterObj);
+
+    const response = {
+      records: result,
+      totalCount,
+    };
+    return ResponseService.success(res, `Query updated successfully`, response);
+  } catch (error) {
+    console.log("api error", error);
+    return ResponseService.serverError(res, error);
+  }
+};

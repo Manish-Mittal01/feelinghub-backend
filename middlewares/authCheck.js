@@ -5,6 +5,11 @@ const { StatusCode } = require("../utils/constants");
 
 module.exports.authCheck = async (req, res, next) => {
   try {
+    const { requestBy } = req.body;
+    if (requestBy && requestBy === "admin") {
+      staffCheck();
+    }
+
     let token = req.headers.authorization;
     let userId = req.headers.userid;
     token = token?.replace("Bearer ", "");
@@ -24,7 +29,7 @@ module.exports.authCheck = async (req, res, next) => {
 
     const existingUser = await UserModel.findOne(
       { _id: user._id },
-      "status accessToken avatar"
+      "status accessToken avatar email"
     ).lean();
 
     if (!existingUser) return ResponseService.failed(res, "User not found", StatusCode.notFound);

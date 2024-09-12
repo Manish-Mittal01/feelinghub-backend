@@ -10,7 +10,7 @@ const {
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
-const { addQuery, updateQuery } = require("../userControllers/queryController");
+const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 
 // stories
@@ -91,6 +91,9 @@ router
 // query
 router.route("/query/add").post(validateRequest(querySchema.addQuerySchema), addQuery);
 router.route("/query/update").post(validateRequest(querySchema.updateQuerySchema), updateQuery);
+router
+  .route("/queries/list")
+  .post(authCheck, validateRequest(querySchema.queriesListSchema), queriesList);
 
 // bookmark
 router

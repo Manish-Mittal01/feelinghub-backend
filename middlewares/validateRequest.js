@@ -306,7 +306,6 @@ module.exports = {
           .valid(...queryReasons)
           .required(),
         comment: Joi.string().min(10).max(500).required(),
-        file: Joi.string().uri(),
       })
       .unknown(true),
 
@@ -317,6 +316,13 @@ module.exports = {
         status: Joi.string()
           .valid(...queryStatus)
           .default("active"),
+      })
+      .unknown(true),
+
+    queriesListSchema: Joi.object()
+      .keys({
+        ...paginationValidation,
+        reason: Joi.string().valid(...queryReasons),
       })
       .unknown(true),
   },
