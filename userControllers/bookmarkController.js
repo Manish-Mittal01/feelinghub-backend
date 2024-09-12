@@ -33,18 +33,118 @@ module.exports.getBookmarkList = async (req, res) => {
   try {
     const { page, limit, order, orderBy, userId } = req.body;
 
-    const bookmarkList = await bookmarkModel
-      .find({ user: userId })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ [orderBy]: order })
-      .populate("story story.user");
+    const storiesListPipeline = [
+      { $match: { user: userId } },
+      {
+        $lookup: {
+          from: "stories",
+          localField: "story",
+          foreignField: "_id",
+          as: "story",
+        },
+      },
+      {
+        $unwind: {
+          path: "$story",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "storyreactions",
+          let: { storyId: "$story._id" },
+          pipeline: [
+            {
+              $match: { $expr: { $eq: ["$story", "$$storyId"] }, reactionType: { $exists: true } },
+            },
+            { $count: "count" },
+          ],
 
-    const bookmarkCount = await bookmarkModel.countDocuments({ user: userId });
+          as: "reactionsCount",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "storyreactions",
+          let: { storyId: "$story._id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$story", "$$storyId"] }, { $eq: ["$user", userId] }],
+                },
+                reactionType: { $exists: true },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "myReaction",
+        },
+      },
+
+      {
+        $addFields: {
+          "story.reactionsCount": { $ifNull: [{ $arrayElemAt: ["$reactionsCount.count", 0] }, 0] },
+          "story.myReaction": {
+            $ifNull: [{ $arrayElemAt: ["$myReaction.reactionType", 0] }, null],
+          },
+          "story.isBookmarked": true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$story.user", showUserDetails: "$story.anonymousSharing" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$_id", "$$userId"] }, { $eq: ["$$showUserDetails", false] }],
+                },
+              },
+            },
+            { $project: { name: 1, avatar: 1, gender: 1 } },
+          ],
+          as: "story.user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$story.user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "categories",
+          localField: "story.category",
+          foreignField: "_id",
+          as: "story.category",
+        },
+      },
+      {
+        $unwind: {
+          path: "$story.category",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      { $project: { story: 1 } },
+      { $sort: { [orderBy]: order } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ];
+
+    let stories = bookmarkModel.aggregate(storiesListPipeline);
+    let totalCount = bookmarkModel.countDocuments({ user: userId });
+
+    [stories, totalCount] = await Promise.all([stories, totalCount]);
 
     const response = {
-      items: bookmarkList,
-      totalCount: bookmarkCount,
+      records: stories,
+      totalCount: totalCount,
     };
 
     return ResponseService.success(res, "Bookmark list found", response);

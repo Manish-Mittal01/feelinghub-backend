@@ -35,13 +35,12 @@ const paginationValidation = {
 const addStorySchemaKeys = {
   title: Joi.string().min(5).max(150).required(),
   description: Joi.string().min(50).required(),
-  category: Joi.string().custom(validateMongoId, "Categoryid validation").required(),
+  category: Joi.string().custom(validateMongoId, "CategoryId validation").required(),
   anonymousSharing: Joi.boolean(),
-  status: Joi.string().valid(...storyStatus),
-  media: Joi.object().keys({
-    url: Joi.string().uri().required(),
-    type: Joi.string().required(),
-  }),
+  isPrivate: Joi.boolean(),
+  status: Joi.string()
+    .valid(...storyStatus)
+    .default("active"),
 };
 
 const addCategorySchemaKeys = {
