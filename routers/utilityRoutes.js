@@ -2,10 +2,11 @@ const router = require("express").Router();
 const { validateFile } = require("../middlewares/validateFile");
 const { uploadFiles } = require("../commonControllers/upload-file");
 const { getCategories } = require("../adminControllers/categoryController");
+const { updateFirebaseToken } = require("../commonControllers/firebaseController");
+const { authCheck } = require("../middlewares/authCheck");
 
 router.route("/uploadFiles").post(validateFile, uploadFiles);
 router.route("/categories/list").get(getCategories);
-// router.route("/getContentPage/:pageId").get(getContentPage);
-// router.route("/getContentPageList").get(getContentPageList);
+router.route("/firebaseToken/update").post(authCheck, updateFirebaseToken);
 
 module.exports = router;

@@ -2,7 +2,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyCT3Kdu-cw19QNWZk7B75t78BkvqaJpLHw",
   authDomain: "feelinghub-46bd1.firebaseapp.com",
   projectId: "feelinghub-46bd1",
-  storageBucket: "feelinghub-46bd1.appspot.com",
   messagingSenderId: "796834940165",
   appId: "1:796834940165:web:e8a04ec2f9cf9b1d2ce36c",
   measurementId: "G-KT4RZ4BCN1",

@@ -113,7 +113,7 @@ const verifyEmail = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password, firebaseToken } = req.body;
+    const { email, password } = req.body;
 
     const user = await UserModel.findOne({ email });
 
@@ -129,13 +129,7 @@ const login = async (req, res) => {
     if (user.email === email && isPasswordCorrect) {
       const token = user.generateJWT(user);
 
-      const result = await UserModel.updateOne(
-        { email },
-        {
-          $push: { accessToken: token },
-          $addToSet: { firebaseToken: firebaseToken },
-        }
-      );
+      const result = await UserModel.updateOne({ email }, { $push: { accessToken: token } });
       return ResponseService.success(res, "Login Successfull!!", { token, userId: user._id });
     } else {
       return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
