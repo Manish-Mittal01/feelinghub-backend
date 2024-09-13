@@ -6,7 +6,7 @@ const getCategories = async (req, res) => {
   try {
     const categories = await categoryModel.find().lean();
 
-    return ResponseService.success(res, "Categories found!!", { items: categories });
+    return ResponseService.success(res, "Categories found!!", categories);
   } catch (error) {
     console.log("error", error);
     return ResponseService.serverError(res, error);

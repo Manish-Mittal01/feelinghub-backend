@@ -36,7 +36,10 @@ module.exports.getStoriesList = async (req, res) => {
         filters[filterKey] = req.body[filterKey];
       }
     }
-    if (listType === "main") {
+
+    if (listType === "user") {
+      filters.user = userid;
+    } else if (listType === "main") {
       filters.status = "active";
       filters.isPrivate = false;
     }
