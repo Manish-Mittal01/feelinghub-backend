@@ -248,9 +248,9 @@ module.exports.updateStory = async (req, res) => {
 
 module.exports.deleteStory = async (req, res) => {
   try {
-    const { storyId } = req.body;
+    const { storyId, userId } = req.body;
 
-    const story = await storyModel.findOne({ _id: storyId }).lean();
+    const story = await storyModel.exists({ _id: storyId, user: userId });
     if (!story) return ResponseService.success(res, `Story deleted!!`, result);
 
     const result = await storyModel.updateOne({ _id: storyId }, { status: "deleted" });
