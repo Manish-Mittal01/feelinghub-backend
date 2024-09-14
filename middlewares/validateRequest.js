@@ -360,6 +360,15 @@ module.exports = {
       .unknown(true),
   },
 
+  //////////// utility
+  firebaseSchema: {
+    updateTokenSchema: Joi.object()
+      .keys({
+        storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
+      })
+      .unknown(true),
+  },
+
   validateRequest: (schema) => {
     return (req, res, next) => {
       try {

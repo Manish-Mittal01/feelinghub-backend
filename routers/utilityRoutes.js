@@ -4,9 +4,12 @@ const { uploadFiles } = require("../commonControllers/upload-file");
 const { getCategories } = require("../adminControllers/categoryController");
 const { updateFirebaseToken } = require("../commonControllers/firebaseController");
 const { authCheck } = require("../middlewares/authCheck");
+const { validateRequest, firebaseSchema } = require("../middlewares/validateRequest");
 
 router.route("/uploadFiles").post(validateFile, uploadFiles);
 router.route("/categories/list").get(getCategories);
-router.route("/firebaseToken/update").post(authCheck, updateFirebaseToken);
+router
+  .route("/firebaseToken/update")
+  .post(authCheck, validateRequest(firebaseSchema.updateTokenSchema), updateFirebaseToken);
 
 module.exports = router;

@@ -45,7 +45,7 @@ module.exports.authCheck = async (req, res, next) => {
     request.body = { ...request.body, userId: existingUser._id, userDetails: existingUser };
     next();
   } catch (error) {
-    console.log("validateStaffToken error", error);
+    console.log("validate user Token error", error);
     ResponseService.serverError(res, error);
   }
 };
@@ -66,7 +66,6 @@ module.exports.staffCheck = async (req, res, next) => {
       }
       user = decoded;
     } catch (err) {
-      console.log("err", err);
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
     }
 
@@ -78,7 +77,6 @@ module.exports.staffCheck = async (req, res, next) => {
     if (existingUser && existingUser.status === "blocked")
       return ResponseService.failed(res, "User is blocked", StatusCode.forbidden);
 
-    console.log("existingUser", existingUser);
     if (!existingUser.accessToken?.includes(token))
       return ResponseService.failed(res, "Unautorized", StatusCode.unauthorized);
 
@@ -86,7 +84,7 @@ module.exports.staffCheck = async (req, res, next) => {
     request.body = { ...request.body, userId: existingUser._id, userDetails: existingUser };
     next();
   } catch (error) {
-    console.log("auth check error", error);
+    console.log("validateStaffToken error", error);
     ResponseService.serverError(res, error);
   }
 };
