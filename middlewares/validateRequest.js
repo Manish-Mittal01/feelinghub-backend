@@ -341,6 +341,16 @@ module.exports = {
       .unknown(true),
   },
 
+  //////////// utility
+  firebaseSchema: {
+    updateTokenSchema: Joi.object()
+      .keys({
+        firebaseToken: Joi.string().required(),
+      })
+      .unknown(true),
+  },
+
+  ////////////admin
   categorySchema: {
     addCategorySchema: Joi.object()
       .keys({
@@ -359,12 +369,10 @@ module.exports = {
       })
       .unknown(true),
   },
-
-  //////////// utility
-  firebaseSchema: {
-    updateTokenSchema: Joi.object()
+  usersSchema: {
+    usersListSchema: Joi.object()
       .keys({
-        firebaseToken: Joi.string().required(),
+        ...paginationValidation,
       })
       .unknown(true),
   },

@@ -1,7 +1,12 @@
 const router = require("express").Router();
 const categoryController = require("../adminControllers/categoryController");
+const usersController = require("../adminControllers/userController");
 const { staffCheck } = require("../middlewares/authCheck");
-const { validateRequest, validateRequestParams } = require("../middlewares/validateRequest");
+const {
+  validateRequest,
+  validateRequestParams,
+  usersSchema,
+} = require("../middlewares/validateRequest");
 const { categorySchema } = require("../middlewares/validateRequest");
 
 //categories
@@ -32,6 +37,15 @@ router
     staffCheck,
     validateRequestParams(categorySchema.deleteCategorySchema),
     categoryController.getCategoryDetails
+  );
+
+//users
+router
+  .route("/users/list")
+  .post(
+    staffCheck,
+    validateRequestParams(usersSchema.usersListSchema),
+    usersController.getAllUsers
   );
 
 module.exports = router;
