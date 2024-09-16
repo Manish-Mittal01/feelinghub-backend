@@ -42,10 +42,6 @@ router
 //users
 router
   .route("/users/list")
-  .post(
-    staffCheck,
-    validateRequestParams(usersSchema.usersListSchema),
-    usersController.getAllUsers
-  );
+  .post(staffCheck, validateRequest(usersSchema.usersListSchema), usersController.getAllUsers);
 
 module.exports = router;

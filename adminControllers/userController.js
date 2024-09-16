@@ -5,7 +5,7 @@ const { ResponseService } = require("../services/responseService");
 const { StatusCode } = require("../utils/constants");
 
 module.exports.getAllUsers = async (req, res) => {
-  const { page = 1, limit = 10, status, search, country } = req.body;
+  const { page, limit, order, orderBy, status, gender, search } = req.body;
 
   let queryObj = {};
   if (status) {
@@ -24,8 +24,9 @@ module.exports.getAllUsers = async (req, res) => {
   }
 
   let users = await User.find({ ...queryObj })
+    .select("-password")
     .skip((page - 1) * limit)
-    .sort({ createdAt: -1 })
+    .sort({ [orderBy]: order })
     .limit(limit)
     .lean();
 
