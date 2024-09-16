@@ -32,6 +32,20 @@ const addCategory = async (req, res) => {
   }
 };
 
+const getCategoryDetails = async (req, res) => {
+  try {
+    const { categoryId } = req.body;
+
+    const isCategoryExist = await categoryModel.findOne({ _id: categoryId }).lean();
+    if (!isCategoryExist) return ResponseService.failed(StatusCode.notFound, "Category not found");
+
+    return ResponseService.success(res, "Category deleted", isCategoryExist);
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.serverError(res, error);
+  }
+};
+
 const updateCategory = async (req, res) => {
   try {
     const { categoryId } = req.body;
@@ -65,4 +79,4 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-module.exports = { addCategory, getCategories, updateCategory, deleteCategory };
+module.exports = { addCategory, getCategories, updateCategory, deleteCategory, getCategoryDetails };

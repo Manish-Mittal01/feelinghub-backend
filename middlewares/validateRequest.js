@@ -364,7 +364,7 @@ module.exports = {
   firebaseSchema: {
     updateTokenSchema: Joi.object()
       .keys({
-        storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
+        firebaseToken: Joi.string().required(),
       })
       .unknown(true),
   },
@@ -373,6 +373,33 @@ module.exports = {
     return (req, res, next) => {
       try {
         const result = schema.validate(req.body, {
+          stripUnknown: true,
+        });
+
+        if (result.error) {
+          return ResponseService.failed(
+            res,
+            result.error?.details?.[0] || {},
+            StatusCode.badRequest
+          );
+        } else {
+          if (!req.value) {
+            req.value = {};
+          }
+
+          req["body"] = result.value;
+          next();
+        }
+      } catch (error) {
+        return ResponseService.serverError(res, error);
+      }
+    };
+  },
+
+  validateRequestParams: (schema) => {
+    return (req, res, next) => {
+      try {
+        const result = schema.validate(req.params, {
           stripUnknown: true,
         });
 

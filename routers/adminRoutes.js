@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const categoryController = require("../adminControllers/categoryController");
 const { staffCheck } = require("../middlewares/authCheck");
-const { validateRequest } = require("../middlewares/validateRequest");
+const { validateRequest, validateRequestParams } = require("../middlewares/validateRequest");
 const { categorySchema } = require("../middlewares/validateRequest");
 
 //categories
@@ -21,10 +21,17 @@ router
   );
 router
   .route("/category/delete")
-  .post(
+  .delete(
     staffCheck,
-    validateRequest(categorySchema.deleteCategorySchema),
+    validateRequestParams(categorySchema.deleteCategorySchema),
     categoryController.deleteCategory
+  );
+router
+  .route("/category/details/:categoryId")
+  .get(
+    staffCheck,
+    validateRequestParams(categorySchema.deleteCategorySchema),
+    categoryController.getCategoryDetails
   );
 
 module.exports = router;
