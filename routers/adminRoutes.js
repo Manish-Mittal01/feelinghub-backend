@@ -20,7 +20,7 @@ router
     categoryController.updateCategory
   );
 router
-  .route("/category/delete")
+  .route("/category/delete/:categoryId")
   .delete(
     staffCheck,
     validateRequestParams(categorySchema.deleteCategorySchema),
