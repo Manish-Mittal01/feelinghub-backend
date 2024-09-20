@@ -2,11 +2,11 @@ const { Schema, model } = require("mongoose");
 
 const contentPagesSchema = Schema(
   {
-    page: {
+    title: {
       type: String,
       required: true,
     },
-    description: {
+    content: {
       type: String,
       required: true,
     },

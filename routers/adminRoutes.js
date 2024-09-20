@@ -39,9 +39,16 @@ router
     categoryController.getCategoryDetails
   );
 
-//users
+//users management
 router
   .route("/users/list")
   .post(staffCheck, validateRequest(usersSchema.usersListSchema), usersController.getAllUsers);
+router
+  .route("/user/status/update")
+  .post(
+    staffCheck,
+    validateRequest(usersSchema.updateUserStatusSchema),
+    usersController.updateUserStatus
+  );
 
 module.exports = router;

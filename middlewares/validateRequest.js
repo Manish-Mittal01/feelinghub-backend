@@ -349,6 +349,21 @@ module.exports = {
       })
       .unknown(true),
   },
+  cmsSchema: {
+    cmsAddSchema: Joi.object()
+      .keys({
+        title: Joi.string().required(),
+        content: Joi.string().required(),
+      })
+      .unknown(true),
+    cmsUpdateSchema: Joi.object()
+      .keys({
+        pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
+        title: Joi.string().required(),
+        content: Joi.string().required(),
+      })
+      .unknown(true),
+  },
 
   ////////////admin
   categorySchema: {
@@ -373,6 +388,12 @@ module.exports = {
     usersListSchema: Joi.object()
       .keys({
         ...paginationValidation,
+      })
+      .unknown(true),
+    updateUserStatusSchema: Joi.object()
+      .keys({
+        userId: Joi.string().custom(validateMongoId, "userId validation").required(),
+        status: Joi.string().valid("active", "blocked").required(),
       })
       .unknown(true),
   },
