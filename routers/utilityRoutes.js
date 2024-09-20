@@ -5,7 +5,7 @@ const { getCategories } = require("../adminControllers/categoryController");
 const { updateFirebaseToken } = require("../commonControllers/firebaseController");
 const { authCheck, staffCheck } = require("../middlewares/authCheck");
 const { validateRequest, firebaseSchema, cmsSchema } = require("../middlewares/validateRequest");
-const { addContentPage } = require("../commonControllers/cmsController");
+const { addContentPage, updateContentPage } = require("../commonControllers/cmsController");
 
 router.route("/uploadFiles").post(validateFile, uploadFiles);
 router.route("/categories/list").get(getCategories);
