@@ -45,6 +45,11 @@ const userSchema = Schema(
       type: [String],
       default: [],
     },
+    bio: {
+      type: String,
+      required: true,
+      default: "I love FeelingHub",
+    },
     status: {
       type: String,
       enum: ["inactive", "active", "blocked"],

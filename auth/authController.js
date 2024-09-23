@@ -8,7 +8,16 @@ const { ResponseService } = require("../services/responseService");
 
 const register = async (req, res) => {
   try {
-    const { name, email, mobile, password, gender = "", birth_date = "", avatar = {} } = req.body;
+    const {
+      name,
+      email,
+      mobile,
+      password,
+      gender = "",
+      birth_date = "",
+      avatar = {},
+      bio,
+    } = req.body;
 
     const userExist = await UserModel.findOne({ $or: [{ email }, { mobile }] });
 
@@ -39,7 +48,7 @@ const register = async (req, res) => {
     if (userExist && userExist.status === "inactive") {
       result = await UserModel.updateOne(
         { email },
-        { name, mobile, password: encryptPassword, gender, birth_date, avatar: avatar || {} }
+        { name, mobile, password: encryptPassword, gender, birth_date, avatar: avatar || {}, bio }
       );
     } else {
       result = await user.save();
@@ -229,6 +238,7 @@ const updateUserProfile = async (req, res) => {
       birth_date,
       address,
       avatar = {},
+      bio,
       userId,
       userDetails,
     } = req.body;
@@ -241,7 +251,7 @@ const updateUserProfile = async (req, res) => {
 
     const result = await UserModel.updateOne(
       { _id: userId },
-      { name, mobile, gender, birth_date, avatar: avatar || {}, address }
+      { name, mobile, gender, birth_date, avatar: avatar || {}, address, bio }
     );
 
     return ResponseService.success(res, "User updated successfully", result);
