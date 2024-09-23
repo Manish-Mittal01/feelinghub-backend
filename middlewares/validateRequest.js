@@ -322,7 +322,9 @@ module.exports = {
     queriesListSchema: Joi.object()
       .keys({
         ...paginationValidation,
-        reason: Joi.string().valid(...queryReasons),
+        reason: Joi.string()
+          .valid(...queryReasons)
+          .allow(""),
         status: Joi.string().valid(...queryStatus),
       })
       .unknown(true),
