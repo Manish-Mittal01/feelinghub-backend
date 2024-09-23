@@ -42,17 +42,27 @@ module.exports.updateQuery = async (req, res) => {
 
 module.exports.queriesList = async (req, res) => {
   try {
-    const { status, userDetails } = req.body;
+    const { page, limit, order, orderBy, reason, status, userDetails } = req.body;
 
+    const filterKeys = ["reason", "status"];
     const filterObj = {};
-    if (status) {
-      filterObj.status = status;
+
+    for await (let filterKey of filterKeys) {
+      if (req.body[filterKey]) {
+        filterObj[filterKey] = req.body[filterKey];
+      }
     }
+
     if (userDetails) {
       filterObj.email = userDetails.email;
     }
 
-    const result = await queryModel.find(filterObj);
+    const result = await queryModel
+      .find(filterObj)
+      .sort({ [orderBy]: order })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
     const totalCount = await queryModel.countDocuments(filterObj);
 
     const response = {

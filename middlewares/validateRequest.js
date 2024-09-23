@@ -323,6 +323,7 @@ module.exports = {
       .keys({
         ...paginationValidation,
         reason: Joi.string().valid(...queryReasons),
+        status: Joi.string().valid(...queryStatus),
       })
       .unknown(true),
   },
