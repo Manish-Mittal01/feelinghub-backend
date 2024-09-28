@@ -81,7 +81,11 @@ module.exports.staffCheck = async (req, res, next) => {
       return ResponseService.failed(res, "Unautorized", StatusCode.unauthorized);
 
     const request = req;
-    request.body = { ...request.body, userId: existingUser._id, userDetails: existingUser };
+    request.body = {
+      ...request.body,
+      userId: existingUser._id?.toString(),
+      userDetails: existingUser,
+    };
     next();
   } catch (error) {
     console.log("validateStaffToken error", error);
@@ -100,6 +104,7 @@ const verifyToken = (token) => {
       });
     });
   } catch (error) {
+    console.log("error", error);
     return ResponseService.serverError(res, error);
   }
 };
