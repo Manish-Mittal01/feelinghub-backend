@@ -120,29 +120,77 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const getUserInfoFromTGoogleoken = async (token) => {
+  return fetch(
+    `https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,genders,phoneNumbers,birthdays`,
+    {
+      headers: {
+        Authorization: token,
+      },
+    }
+  )
+    .then((res) => res.json())
+    .then((res) => {
+      return res;
+    })
+    .catch((err) => console.log(err));
+};
+
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password, token, loginType } = req.body;
+    let accessToken = "";
+    let userData = {};
+    let result = {};
 
-    const user = await UserModel.findOne({ email });
+    if (token && loginType === "google") {
+      userData = await getUserInfoFromTGoogleoken(token);
+      email = userData.emailAddresses[0]?.value;
+    }
 
-    if (!user) return ResponseService.failed(res, "User not Found", StatusCode.notFound);
-    if (user.status === "blocked")
+    console.log("userData", userData);
+
+    const birth_date = userData.birthdays
+      ? `${userData.birthdays[0]?.date?.year}-${userData.birthdays[0]?.date?.month}-${userData.birthdays[0]?.date?.day}`
+      : "";
+
+    const isUserExist = await UserModel.findOne({ email });
+
+    if (!isUserExist && loginType === "google") {
+      const user = {
+        name: userData.names[0]?.displayName,
+        email,
+        birth_date,
+        status: "active",
+      };
+
+      const newUser = new UserModel(user);
+      result = await newUser.save();
+    }
+
+    if (!isUserExist && loginType === "normal")
+      return ResponseService.failed(res, "User not Found", StatusCode.notFound);
+    if (isUserExist && isUserExist.status === "blocked")
       return ResponseService.failed(res, "User is blocked", StatusCode.unauthorized);
-    if (user.status === "inactive") {
-      return ResponseService.failed(res, "Verify email before login", StatusCode.forbidden);
+    if (isUserExist && isUserExist.status === "inactive") {
+      return ResponseService.failed(res, "Verify email to login", StatusCode.forbidden);
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-    if (user.email === email && isPasswordCorrect) {
-      const token = user.generateJWT(user);
-
-      const result = await UserModel.updateOne({ email }, { $push: { accessToken: token } });
-      return ResponseService.success(res, "Login Successfull!!", { token, userId: user._id });
+    if (loginType === "normal") {
+      const isPasswordCorrect = await bcrypt.compare(password, isUserExist.password);
+      if (!isPasswordCorrect) {
+        return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
+      }
+      accessToken = isUserExist.generateJWT(isUserExist);
     } else {
-      return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
+      accessToken = (isUserExist || result).generateJWT(isUserExist);
     }
+
+    await UserModel.updateOne({ email }, { $push: { accessToken: accessToken } });
+    return ResponseService.success(res, "Login Successfull!!", {
+      token: accessToken,
+      userId: (isUserExist || result)._id,
+    });
   } catch (error) {
     console.log("error in login controller", error);
     return ResponseService.serverError(res, error);
@@ -246,7 +294,9 @@ const updateUserProfile = async (req, res) => {
     if (userDetails.avatar?.name) {
       const storage = getStorage();
       const desertRef = ref(storage, `${webName}/${userDetails.avatar?.name}`);
-      const deleteOldImage = await deleteObject(desertRef);
+      deleteObject(desertRef)
+        .then()
+        .catch((err) => console.log("error deleteing user image", err));
     }
 
     const result = await UserModel.updateOne(

@@ -9,7 +9,7 @@ const userSchema = Schema(
     },
     mobile: {
       type: String,
-      required: true,
+      // required: true,
     },
     email: {
       type: String,
@@ -18,7 +18,6 @@ const userSchema = Schema(
     },
     password: {
       type: String,
-      required: true,
     },
     gender: {
       type: String,

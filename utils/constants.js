@@ -59,6 +59,7 @@ module.exports.StatusCode = {
   success: 200,
   created: 201,
   accepted: 202,
+  partialContent: 206,
   badRequest: 400,
   unauthorized: 401,
   paymentRequired: 402,

@@ -117,15 +117,22 @@ module.exports = {
 
     loginSchema: Joi.object()
       .keys({
-        ...emailSchemaKey,
-        password: Joi.string()
-          .pattern(new RegExp(passwordRegex))
-          .messages({
-            "string.pattern.base": `The password needs to be at least eight characters long and contain capital, lowercase, numbers, and special characters.`,
-          })
-          .required(),
+        loginType: Joi.string().valid("google", "normal").required(),
       })
-      .unknown(true),
+      .when(Joi.object({ loginType: Joi.string().valid("google") }).unknown(), {
+        then: Joi.object({
+          token: Joi.string().required(),
+        }),
+        otherwise: Joi.object({
+          ...emailSchemaKey,
+          password: Joi.string()
+            .pattern(new RegExp(passwordRegex))
+            .messages({
+              "string.pattern.base": `The password needs to be at least eight characters long and contain capital, lowercase, numbers, and special characters.`,
+            })
+            .required(),
+        }),
+      }),
 
     passwordResetSchema: Joi.object()
       .keys({
