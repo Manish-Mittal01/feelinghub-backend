@@ -82,11 +82,11 @@ module.exports = {
           })
           .required(),
         status: Joi.string().valid(...userStatus),
-        gender: Joi.string().valid("male", "female"),
-        address: Joi.string(),
-        birth_date: Joi.string().pattern(new RegExp(dateRegex)).messages({
-          "string.pattern.base": `date format should be YYYY-MM-DD`,
-        }),
+        // gender: Joi.string().valid("male", "female"),
+        // address: Joi.string(),
+        // birth_date: Joi.string().pattern(new RegExp(dateRegex)).messages({
+        //   "string.pattern.base": `date format should be YYYY-MM-DD`,
+        // }),
         avatar: Joi.alternatives().try(
           Joi.object({
             url: Joi.string().uri().required(),
@@ -211,7 +211,8 @@ module.exports = {
       .keys({
         ...paginationValidation,
         category: Joi.string().custom(validateMongoId, "CategoryId validation"),
-        listType: Joi.string().valid("admin", "user", "main").default("main"),
+        user: Joi.string().custom(validateMongoId, "userId validation"),
+        listType: Joi.string().valid("admin", "user", "main", "others").default("main"),
         status: Joi.string().when("listType", {
           is: Joi.alternatives().try("main"),
           then: Joi.valid("active"),
@@ -347,6 +348,15 @@ module.exports = {
     bookmarksListSchema: Joi.object()
       .keys({
         ...paginationValidation,
+      })
+      .unknown(true),
+  },
+
+  profileSchema: {
+    getOtherUserProfile: Joi.object()
+      .keys({
+        ...paginationValidation,
+        otherUserId: Joi.string().custom(validateMongoId, "storyId validation").required(),
       })
       .unknown(true),
   },

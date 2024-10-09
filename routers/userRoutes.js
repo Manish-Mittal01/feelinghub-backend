@@ -7,11 +7,13 @@ const {
   querySchema,
   bookmarkSchema,
   commonSchema,
+  profileSchema,
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
+const { getOtherUserProfile } = require("../userControllers/otherUserProfileCOntroller");
 
 // stories
 router
@@ -87,6 +89,11 @@ router
     validateRequest(commonSchema.paginationSchema),
     storyResponseController.getUserCommentsAndRepliesList
   );
+
+//profile
+router
+  .route("/profile/others")
+  .post(validateRequest(profileSchema.getOtherUserProfile), getOtherUserProfile);
 
 // query
 router.route("/query/add").post(validateRequest(querySchema.addQuerySchema), addQuery);

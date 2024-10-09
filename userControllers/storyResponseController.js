@@ -44,7 +44,7 @@ const getReactionsList = async (req, res) => {
   try {
     const { orderBy, order, limit, page, storyId } = req.body;
 
-    const isStoryExist = await storyModel.findOne({ _id: storyId });
+    const isStoryExist = await storyModel.exists({ _id: storyId });
     if (!isStoryExist) return ResponseService.failed(res, "Story not found", StatusCode.notFound);
 
     let responses = storyReactionsModel

@@ -120,7 +120,7 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-const getUserInfoFromTGoogleoken = async (token) => {
+const getUserInfoFromTGoogleToken = async (token) => {
   return fetch(
     `https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,genders,phoneNumbers,birthdays`,
     {
@@ -144,7 +144,7 @@ const login = async (req, res) => {
     let result = {};
 
     if (token && loginType === "google") {
-      userData = await getUserInfoFromTGoogleoken(token);
+      userData = await getUserInfoFromTGoogleToken(token);
       email = userData.emailAddresses[0]?.value;
     }
 

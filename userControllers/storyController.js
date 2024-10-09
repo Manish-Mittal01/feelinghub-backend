@@ -25,20 +25,21 @@ module.exports.addStory = async (req, res) => {
 
 module.exports.getStoriesList = async (req, res) => {
   try {
-    const { page, limit, order, orderBy, listType } = req.body;
+    const { page, limit, order, orderBy, listType, user } = req.body;
     let { userid } = req.headers;
     userid = userid ? Types.ObjectId(userid) : null;
 
     const filters = {};
-    const filterValues = ["status", "category", "isPrivate"];
+    const filterValues = ["status", "category", "isPrivate", "anonymousSharing"];
+
     for (let filterKey of filterValues) {
       if (req.body[filterKey]?.toString()) {
         filters[filterKey] = req.body[filterKey];
       }
     }
 
-    if (listType === "user") {
-      filters.user = userid;
+    if (listType === "user" || listType === "others") {
+      filters.user = user;
     } else if (listType === "main") {
       filters.status = "active";
       filters.isPrivate = false;
@@ -111,7 +112,7 @@ module.exports.getStoriesList = async (req, res) => {
       { $limit: limit },
     ];
 
-    if (listType === "main") {
+    if (listType === "main" || listType === "others") {
       storiesListPipeline.splice(
         2,
         0,
@@ -189,21 +190,13 @@ module.exports.getStoryDetails = async (req, res) => {
       story: storyId,
       reactionType: { $exists: true },
     });
+
     let isStoryBookmarked = false;
     let myReaction = "";
     if (userid) {
-      isStoryBookmarked = bookmarkmodel
-        .exists({
-          story: storyId,
-          user: userid,
-        })
-        .lean();
+      isStoryBookmarked = bookmarkmodel.exists({ story: storyId, user: userid }).lean();
       myReaction = storyReactionsModel
-        .findOne({
-          story: storyId,
-          user: userid,
-          reactionType: { $exists: true },
-        })
+        .findOne({ story: storyId, user: userid, reactionType: { $exists: true } })
         .lean();
     }
 
@@ -234,12 +227,12 @@ module.exports.updateStory = async (req, res) => {
   try {
     const { storyId } = req.body;
 
-    const story = await storyModel.findOne({ _id: storyId }).lean();
+    const story = await storyModel.exists({ _id: storyId });
     if (!story) return ResponseService.success(res, `story not found`, StatusCode.notFound);
 
     const result = await storyModel.updateOne({ _id: storyId }, { ...req.body });
 
-    return ResponseService.success(res, `story updated successfully`, story);
+    return ResponseService.success(res, `story updated successfully`, result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.serverError(res, error);
