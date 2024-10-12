@@ -32,7 +32,7 @@ module.exports.authCheck = async (req, res, next) => {
       "status accessToken avatar email"
     ).lean();
 
-    if (!existingUser) return ResponseService.failed(res, "User not found", StatusCode.notFound);
+    if (!existingUser) return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
     if (existingUser && existingUser.status === "inactive")
       return ResponseService.failed(res, "Please verify your email!!", StatusCode.forbidden);
     if (existingUser && existingUser.status === "blocked")

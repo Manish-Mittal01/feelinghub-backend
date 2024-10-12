@@ -148,8 +148,6 @@ const login = async (req, res) => {
       email = userData.emailAddresses[0]?.value;
     }
 
-    console.log("userData", userData);
-
     const birth_date = userData.birthdays
       ? `${userData.birthdays[0]?.date?.year}-${userData.birthdays[0]?.date?.month}-${userData.birthdays[0]?.date?.day}`
       : "";
@@ -335,6 +333,7 @@ const changePassword = async (req, res) => {
 const logout = async (req, res) => {
   try {
     let token = req.headers.authorization;
+    token = token.replace("Bearer ", "");
     const { userId } = req.body;
 
     const result = await UserModel.updateOne({ _id: userId }, { $pull: { accessToken: token } });
