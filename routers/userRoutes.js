@@ -14,11 +14,29 @@ const storyController = require("../userControllers/storyController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const { getOtherUserProfile } = require("../userControllers/otherUserProfileCOntroller");
+const { ResponseService } = require("../services/responseService");
+
+const checkStoriesRequestType = async (req, res, next) => {
+  try {
+    const { listType } = req.body;
+    if (listType === "user" || listType === "admin") {
+      await authCheck(req, res, next);
+    } else {
+      next();
+    }
+  } catch (err) {
+    return ResponseService.serverError(res, err);
+  }
+};
 
 // stories
 router
   .route("/stories/list")
-  .post(validateRequest(storySchemas.storyListSchema), storyController.getStoriesList);
+  .post(
+    checkStoriesRequestType,
+    validateRequest(storySchemas.storyListSchema),
+    storyController.getStoriesList
+  );
 router
   .route("/story/add")
   .post(authCheck, validateRequest(storySchemas.addStorySchema), storyController.addStory);
