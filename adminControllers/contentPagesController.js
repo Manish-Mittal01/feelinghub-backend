@@ -1,73 +1,75 @@
 const contentPagesModel = require("../Models/contentPagesModel");
-const { StatusCode } = require("../../common/Constants");
-const { ResponseService } = require("../../common/responseService");
-const { checkRequiredFields } = require("../../common/utility");
-
-module.exports.getContentPageList = async (req, res) => {
-  try {
-    const contentPages = await contentPagesModel.find({}, "_id page").lean();
-
-    const response = contentPages || {};
-
-    return ResponseService.success(res, "Page list found successfully", response);
-  } catch (error) {
-    console.log("erro", error);
-    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
-  }
-};
-
-module.exports.getContentPage = async (req, res) => {
-  try {
-    const { pageId } = req.params;
-    const contentPages = await contentPagesModel.findOne({ _id: pageId });
-
-    const response = contentPages || {};
-
-    return ResponseService.success(res, "Page found successfully", response);
-  } catch (error) {
-    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
-  }
-};
+const { StatusCode } = require("../utils/constants");
+const { ResponseService } = require("../services/responseService");
 
 module.exports.addContentPage = async (req, res) => {
   try {
-    const { page, description } = req.body;
+    const { title, content } = req.body;
 
-    const validationError = checkRequiredFields({ page, description });
-    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
-
-    const isPageExist = await contentPagesModel.findOne({ page });
-
-    console.log("isPageExist", isPageExist);
+    const isPageExist = await contentPagesModel.findOne({ title });
     if (isPageExist)
-      return ResponseService.failed(res, "Page heading already exist", StatusCode.notFound);
+      return ResponseService.failed(res, "Page already exist", StatusCode.badRequest);
 
-    const newPageContent = { page, description };
+    const newPageContent = { title, content };
     const pageContent = new contentPagesModel(newPageContent);
 
     const result = await pageContent.save();
 
     return ResponseService.success(res, "Page added successfully", result);
   } catch (error) {
-    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    ResponseService.serverError(res, error);
   }
 };
 
 module.exports.updateContentPage = async (req, res) => {
   try {
-    const { page, description, _id } = req.body;
+    const { title, content, pageId } = req.body;
 
-    const validationError = checkRequiredFields({ page, description, _id });
-    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
+    const isPageExist = await contentPagesModel.exists({ _id: pageId });
+    if (!isPageExist) return ResponseService.failed(res, "Page not found", StatusCode.notFound);
 
-    const isPageExist = await contentPagesModel.find({ _id });
-    if (!isPageExist)
-      return ResponseService.failed(res, "Page doen not exist", StatusCode.notFound);
-
-    const result = await contentPagesModel.updateOne({ _id: _id }, { page, description });
+    const result = await contentPagesModel.updateOne({ _id: pageId }, { title, content });
 
     return ResponseService.success(res, "Page updated successfully", result);
   } catch (error) {
-    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    ResponseService.serverError(res, error);
+  }
+};
+
+module.exports.deleteContentPage = async (req, res) => {
+  try {
+    const { pageId } = req.body;
+
+    const isPageExist = await contentPagesModel.exists({ _id: pageId });
+    if (!isPageExist) return ResponseService.success(res, "Page deleted successfully", {});
+
+    const result = await contentPagesModel.deleteOne({ _id: pageId });
+
+    return ResponseService.success(res, "Page deleted successfully", result);
+  } catch (error) {
+    ResponseService.serverError(res, error);
+  }
+};
+
+module.exports.getContentPageList = async (req, res) => {
+  try {
+    const contentPages = await contentPagesModel.find({}, "title").lean();
+
+    return ResponseService.success(res, "Page list found successfully", contentPages);
+  } catch (error) {
+    ResponseService.serverError(res, error);
+  }
+};
+
+module.exports.getPageContent = async (req, res) => {
+  try {
+    const { pageId } = req.body;
+
+    const pageContent = await contentPagesModel.findOne({ _id: pageId });
+    if (!pageContent) return ResponseService.success(res, "Page not found!!", StatusCode.notFound);
+
+    return ResponseService.success(res, "Page found successfully", pageContent);
+  } catch (error) {
+    ResponseService.serverError(res, error);
   }
 };

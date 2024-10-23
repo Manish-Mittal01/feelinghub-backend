@@ -1,11 +1,13 @@
 const router = require("express").Router();
 const categoryController = require("../adminControllers/categoryController");
 const usersController = require("../adminControllers/userController");
+const cmsController = require("../adminControllers/contentPagesController");
 const { staffCheck } = require("../middlewares/authCheck");
 const {
   validateRequest,
   validateRequestParams,
   usersSchema,
+  cmsSchema,
 } = require("../middlewares/validateRequest");
 const { categorySchema } = require("../middlewares/validateRequest");
 
@@ -50,5 +52,20 @@ router
     validateRequest(usersSchema.updateUserStatusSchema),
     usersController.updateUserStatus
   );
+
+//cms management
+router
+  .route("/cms/add")
+  .post(staffCheck, validateRequest(cmsSchema.addCmsSchema), cmsController.addContentPage);
+router
+  .route("/cms/update")
+  .post(staffCheck, validateRequest(cmsSchema.updateCmsSchema), cmsController.updateContentPage);
+router
+  .route("/cms/delete")
+  .delete(staffCheck, validateRequest(cmsSchema.deleteCmsSchema), cmsController.deleteContentPage);
+router.route("/cms/page/list").get(cmsController.getContentPageList);
+router
+  .route("/cms/page/content")
+  .post(validateRequest(cmsSchema.deleteCmsSchema), cmsController.getPageContent);
 
 module.exports = router;

@@ -370,17 +370,22 @@ module.exports = {
       .unknown(true),
   },
   cmsSchema: {
-    cmsAddSchema: Joi.object()
+    addCmsSchema: Joi.object()
       .keys({
         title: Joi.string().required(),
         content: Joi.string().required(),
       })
       .unknown(true),
-    cmsUpdateSchema: Joi.object()
+    updateCmsSchema: Joi.object()
       .keys({
         pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
         title: Joi.string().required(),
         content: Joi.string().required(),
+      })
+      .unknown(true),
+    deleteCmsSchema: Joi.object()
+      .keys({
+        pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
       })
       .unknown(true),
   },
