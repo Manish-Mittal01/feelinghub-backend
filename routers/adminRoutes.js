@@ -63,9 +63,5 @@ router
 router
   .route("/cms/delete")
   .delete(staffCheck, validateRequest(cmsSchema.deleteCmsSchema), cmsController.deleteContentPage);
-router.route("/cms/page/list").get(cmsController.getContentPageList);
-router
-  .route("/cms/page/content")
-  .post(validateRequest(cmsSchema.deleteCmsSchema), cmsController.getPageContent);
 
 module.exports = router;
