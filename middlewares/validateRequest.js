@@ -372,20 +372,40 @@ module.exports = {
   cmsSchema: {
     addCmsSchema: Joi.object()
       .keys({
-        title: Joi.string().required(),
-        content: Joi.string().required(),
+        title: Joi.string().min(3).max(30).required(),
+        content: Joi.string().min(100).max(2000).required(),
       })
       .unknown(true),
     updateCmsSchema: Joi.object()
       .keys({
         pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
-        title: Joi.string().required(),
-        content: Joi.string().required(),
+        title: Joi.string().min(3).max(30).required(),
+        content: Joi.string().min(100).max(2000).required(),
       })
       .unknown(true),
     deleteCmsSchema: Joi.object()
       .keys({
         pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
+      })
+      .unknown(true),
+  },
+  faqSchema: {
+    addFaqSchema: Joi.object()
+      .keys({
+        question: Joi.string().min(3).max(50).required(),
+        answer: Joi.string().min(50).max(1000).required(),
+      })
+      .unknown(true),
+    updateFaqSchema: Joi.object()
+      .keys({
+        faqId: Joi.string().custom(validateMongoId, "faqId").required(),
+        question: Joi.string().min(3).max(50).required(),
+        answer: Joi.string().min(50).max(1000).required(),
+      })
+      .unknown(true),
+    deleteFaqSchema: Joi.object()
+      .keys({
+        faqId: Joi.string().custom(validateMongoId, "faqId").required(),
       })
       .unknown(true),
   },

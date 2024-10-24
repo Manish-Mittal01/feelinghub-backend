@@ -17,6 +17,7 @@ const { addQuery, updateQuery, queriesList } = require("../userControllers/query
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const { getOtherUserProfile } = require("../userControllers/otherUserProfileCOntroller");
 const { ResponseService } = require("../services/responseService");
+const { getFaqsList } = require("../adminControllers/faqController");
 
 const checkStoriesRequestType = async (req, res, next) => {
   try {
@@ -135,5 +136,8 @@ router.route("/cms/page/list").get(cmsController.getContentPageList);
 router
   .route("/cms/page/content")
   .post(validateRequest(cmsSchema.deleteCmsSchema), cmsController.getPageContent);
+
+//faqs management
+router.route("/faqs/list").get(getFaqsList);
 
 module.exports = router;

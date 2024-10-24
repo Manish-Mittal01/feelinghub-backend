@@ -6,6 +6,7 @@ const userSchema = Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
     mobile: {
       type: String,
@@ -15,6 +16,7 @@ const userSchema = Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
     password: {
       type: String,
