@@ -1,11 +1,12 @@
 const firebaseAdmin = require("firebase-admin");
 const { firebaseServiceAccount: serviceAccount } = require("./config");
+const { ResponseService } = require("../services/responseService");
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
 });
 
-const sendFirebaseNotifications = async (message) => {
+const sendFirebaseNotifications = async (req, res) => {
   const message = {
     notification: {
       title: "Hello",
@@ -26,14 +27,16 @@ const sendFirebaseNotifications = async (message) => {
     ],
   };
 
-  if (!message.notification || message.tokens?.length <= 0) return "";
+  // if (!message.notification || message.tokens?.length <= 0) return "";
 
   try {
     const response = await firebaseAdmin.messaging().sendEachForMulticast(message);
     // console.log("Notification sent:", response);
+    return ResponseService.success(res, "notification sent", response);
     return response;
   } catch (error) {
     console.error("Error sending notification:", error);
+    return ResponseService.serverError(res, error);
   }
 };
 
