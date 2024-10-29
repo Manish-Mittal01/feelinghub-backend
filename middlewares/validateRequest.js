@@ -356,7 +356,6 @@ module.exports = {
   otherUserProfileSchema: {
     getOtherUserProfile: Joi.object()
       .keys({
-        ...paginationValidation,
         otherUserId: Joi.string().custom(validateMongoId, "storyId validation").required(),
       })
       .unknown(true),
