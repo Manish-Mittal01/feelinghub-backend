@@ -7,7 +7,7 @@ module.exports.authCheck = async (req, res, next) => {
   try {
     const { requestBy } = req.body;
     if (requestBy && requestBy === "admin") {
-      staffCheck();
+      return staffCheck();
     }
 
     let token = req.headers.authorization;

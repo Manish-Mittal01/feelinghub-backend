@@ -54,6 +54,9 @@ router
     validateRequest(usersSchema.updateUserStatusSchema),
     usersController.updateUserStatus
   );
+router
+  .route("/user/reports/list")
+  .post(staffCheck, validateRequest(usersSchema.userReportsList), usersController.getUserReports);
 
 //cms management
 router

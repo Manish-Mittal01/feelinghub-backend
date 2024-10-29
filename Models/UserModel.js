@@ -3,30 +3,9 @@ const jwt = require("jsonwebtoken");
 
 const userSchema = Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    mobile: {
-      type: String,
-      // required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-    },
-    gender: {
-      type: String,
-      enum: ["male", "female"],
-    },
-    birth_date: {
-      type: String,
+    accessToken: {
+      type: [String],
+      default: [],
     },
     address: {
       type: String,
@@ -38,18 +17,39 @@ const userSchema = Schema(
       },
       default: {},
     },
-    accessToken: {
-      type: [String],
-      default: [],
-    },
-    firebaseToken: {
-      type: [String],
-      default: [],
+    birth_date: {
+      type: String,
     },
     bio: {
       type: String,
       required: true,
       default: "I love FeelingHub",
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    firebaseToken: {
+      type: [String],
+      default: [],
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+    },
+    mobile: {
+      type: String,
+      // required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    password: {
+      type: String,
     },
     status: {
       type: String,

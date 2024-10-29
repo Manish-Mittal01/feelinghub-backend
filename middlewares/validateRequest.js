@@ -13,6 +13,7 @@ const {
   queryReasons,
   queryStatus,
   storyReportReasons,
+  userReportReasons,
 } = require("../utils/constants");
 
 const validateMongoId = (value, helpers) => {
@@ -352,13 +353,20 @@ module.exports = {
       .unknown(true),
   },
 
-  profileSchema: {
+  otherUserProfileSchema: {
     getOtherUserProfile: Joi.object()
       .keys({
         ...paginationValidation,
         otherUserId: Joi.string().custom(validateMongoId, "storyId validation").required(),
       })
       .unknown(true),
+    reportUser: Joi.object().keys({
+      otherUserId: Joi.string().custom(validateMongoId, "storyId validation").required(),
+      reason: Joi.string()
+        .valid(...userReportReasons)
+        .required(),
+      description: Joi.string().min(15).max(500).required(),
+    }),
   },
 
   //////////// utility
@@ -373,14 +381,14 @@ module.exports = {
     addCmsSchema: Joi.object()
       .keys({
         title: Joi.string().min(3).max(30).required(),
-        content: Joi.string().min(100).max(2000).required(),
+        content: Joi.string().min(100).max(5000).required(),
       })
       .unknown(true),
     updateCmsSchema: Joi.object()
       .keys({
         pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
         title: Joi.string().min(3).max(30).required(),
-        content: Joi.string().min(100).max(2000).required(),
+        content: Joi.string().min(100).max(5000).required(),
       })
       .unknown(true),
     deleteCmsSchema: Joi.object()
@@ -393,14 +401,14 @@ module.exports = {
     addFaqSchema: Joi.object()
       .keys({
         question: Joi.string().min(3).max(50).required(),
-        answer: Joi.string().min(50).max(1000).required(),
+        answer: Joi.string().min(50).max(2000).required(),
       })
       .unknown(true),
     updateFaqSchema: Joi.object()
       .keys({
         faqId: Joi.string().custom(validateMongoId, "faqId").required(),
         question: Joi.string().min(3).max(50).required(),
-        answer: Joi.string().min(50).max(1000).required(),
+        answer: Joi.string().min(50).max(2000).required(),
       })
       .unknown(true),
     deleteFaqSchema: Joi.object()
@@ -437,8 +445,14 @@ module.exports = {
       .unknown(true),
     updateUserStatusSchema: Joi.object()
       .keys({
-        userId: Joi.string().custom(validateMongoId, "userId validation").required(),
+        otherUserId: Joi.string().custom(validateMongoId, "userId validation").required(),
         status: Joi.string().valid("active", "blocked").required(),
+      })
+      .unknown(true),
+    userReportsList: Joi.object()
+      .keys({
+        ...paginationValidation,
+        otherUserId: Joi.string().custom(validateMongoId, "userId validation").required(),
       })
       .unknown(true),
   },

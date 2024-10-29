@@ -7,7 +7,7 @@ const {
   querySchema,
   bookmarkSchema,
   commonSchema,
-  profileSchema,
+  otherUserProfileSchema,
   cmsSchema,
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
@@ -15,7 +15,7 @@ const storyController = require("../userControllers/storyController");
 const cmsController = require("../adminControllers/contentPagesController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
-const { getOtherUserProfile } = require("../userControllers/otherUserProfileCOntroller");
+const otherUserProfileController = require("../userControllers/otherUserProfileController");
 const { ResponseService } = require("../services/responseService");
 const { getFaqsList } = require("../adminControllers/faqController");
 
@@ -111,10 +111,16 @@ router
     storyResponseController.getUserCommentsAndRepliesList
   );
 
-//profile
+//other user
 router
   .route("/profile/others")
-  .post(validateRequest(profileSchema.getOtherUserProfile), getOtherUserProfile);
+  .post(
+    validateRequest(otherUserProfileSchema.getOtherUserProfile),
+    otherUserProfileController.getOtherUserProfile
+  );
+router
+  .route("/report/user")
+  .post(validateRequest(otherUserProfileSchema.reportUser), otherUserProfileController.reportUser);
 
 // query
 router.route("/query/add").post(validateRequest(querySchema.addQuerySchema), addQuery);
