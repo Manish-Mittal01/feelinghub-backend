@@ -18,7 +18,6 @@ const { manageBookmark, getBookmarkList } = require("../userControllers/bookmark
 const otherUserProfileController = require("../userControllers/otherUserProfileController");
 const { ResponseService } = require("../services/responseService");
 const { getFaqsList } = require("../adminControllers/faqController");
-const { sendFirebaseNotifications } = require("../firebase/pushNotification");
 
 const checkStoriesRequestType = async (req, res, next) => {
   try {
@@ -146,6 +145,5 @@ router
 
 //faqs management
 router.route("/faqs/list").get(getFaqsList);
-router.route("/send/notification").get(sendFirebaseNotifications);
 
 module.exports = router;
