@@ -1,20 +1,20 @@
-const firebase = require("firebase-admin");
-// const serviceAccount = require("../serviceAccount.json");
+const firebaseAdmin = require("firebase-admin");
+const { firebaseServiceAccount: serviceAccount } = require("./config");
 
-firebase.initializeApp({
-  // credential: firebase.credential.cert(serviceAccount),
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(serviceAccount),
 });
 
-const sendFirebaseNotification = async (message) => {
-  firebase
-    .messaging()
-    .sendMulticast(message)
-    .then((response) => {
-      console.log("Notification sent:", response);
-    })
-    .catch((error) => {
-      console.error("Error sending notification:", error);
-    });
+const sendFirebaseNotifications = async (message) => {
+  if (!message.notification || message.tokens?.length <= 0) return "";
+
+  try {
+    const response = await firebaseAdmin.messaging().sendEachForMulticast(message);
+    // console.log("Notification sent:", response);
+    return response;
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
 };
 
-module.exports = { firebase, sendFirebaseNotification };
+module.exports = { firebase: firebaseAdmin, sendFirebaseNotifications };

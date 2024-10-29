@@ -3,7 +3,7 @@ const { storyModel } = require("../Models/storyModel");
 const storyReactionsModel = require("../Models/storyReactionsModel");
 const { StatusCode } = require("../utils/constants");
 const { ResponseService } = require("../services/responseService");
-const { sendFirebaseNotification } = require("../firebase/pushNotification");
+const { sendFirebaseNotifications } = require("../firebase/pushNotification");
 const { Types } = require("mongoose");
 
 const manageStoryReaction = async (req, res) => {
@@ -88,10 +88,19 @@ const addStoryComment = async (req, res) => {
         title: "Hello",
         body: "New comment on your story",
       },
-      tokens: isStoryExist.user.firebaseToken,
+      webpush: {
+        notification: {
+          icon: "https://ui-avatars.com/api/?name=First%20Last",
+          // click_action: "https://feelinghub.in", // URL to open on click
+        },
+        fcmOptions: {
+          link: "https://feelinghub.in", // Works similarly to click_action
+        },
+      },
+      tokens: [...(isStoryExist.user.firebaseToken || [])],
     };
 
-    await sendFirebaseNotification(message);
+    await sendFirebaseNotifications(message);
 
     return ResponseService.success(res, "Comment added successfully!", result);
   } catch (error) {
