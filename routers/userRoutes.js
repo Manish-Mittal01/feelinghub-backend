@@ -12,7 +12,7 @@ const {
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
-const cmsController = require("../adminControllers/contentPagesController");
+const cmsController = require("../adminControllers/cmsController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const otherUserProfileController = require("../userControllers/otherUserProfileController");

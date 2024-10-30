@@ -1,8 +1,9 @@
 const router = require("express").Router();
 const categoryController = require("../adminControllers/categoryController");
 const usersController = require("../adminControllers/userController");
-const cmsController = require("../adminControllers/contentPagesController");
+const cmsController = require("../adminControllers/cmsController");
 const faqController = require("../adminControllers/faqController");
+const configController = require("../adminControllers/configsController");
 const { staffCheck } = require("../middlewares/authCheck");
 const {
   validateRequest,
@@ -10,8 +11,9 @@ const {
   usersSchema,
   cmsSchema,
   faqSchema,
+  categorySchema,
+  configsSchema,
 } = require("../middlewares/validateRequest");
-const { categorySchema } = require("../middlewares/validateRequest");
 
 //categories
 router
@@ -79,5 +81,10 @@ router
 router
   .route("/faq/delete")
   .delete(staffCheck, validateRequest(faqSchema.deleteFaqSchema), faqController.deleteFaq);
+
+// configs
+router
+  .route("/config/update")
+  .post(staffCheck, validateRequest(configsSchema.updateConfigs), configController.updateConfigs);
 
 module.exports = router;
