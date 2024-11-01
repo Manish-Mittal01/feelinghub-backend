@@ -24,6 +24,9 @@ module.exports.reportUser = async (req, res) => {
   try {
     const { userId, otherUserId, reason, description } = req.body;
 
+    if (otherUserId === userId)
+      return ResponseService.failed(res, "You can't report yourself", StatusCode.badRequest);
+
     const isUserExist = await UserModel.exists({ _id: otherUserId });
     if (!isUserExist) return ResponseService.failed(res, "User not found", StatusCode.notFound);
 

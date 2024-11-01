@@ -436,6 +436,16 @@ module.exports = {
       })
       .unknown(true),
   },
+  configsSchema: {
+    updateConfigs: Joi.object()
+      .keys({
+        logo: Joi.object().keys({
+          mainLogo: Joi.string(),
+          favIcon: Joi.string(),
+        }),
+      })
+      .unknown(true),
+  },
   usersSchema: {
     usersListSchema: Joi.object()
       .keys({
