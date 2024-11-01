@@ -380,14 +380,14 @@ module.exports = {
     addCmsSchema: Joi.object()
       .keys({
         title: Joi.string().min(3).max(30).required(),
-        content: Joi.string().min(100).max(5000).required(),
+        content: Joi.string().min(100).required(),
       })
       .unknown(true),
     updateCmsSchema: Joi.object()
       .keys({
         pageId: Joi.string().custom(validateMongoId, "cmsPageId").required(),
         title: Joi.string().min(3).max(30).required(),
-        content: Joi.string().min(100).max(5000).required(),
+        content: Joi.string().min(100).required(),
       })
       .unknown(true),
     deleteCmsSchema: Joi.object()

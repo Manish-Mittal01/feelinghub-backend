@@ -12,7 +12,6 @@ const {
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
-const cmsController = require("../adminControllers/contentPagesController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const otherUserProfileController = require("../userControllers/otherUserProfileController");
@@ -136,12 +135,6 @@ router
 router
   .route("/bookmarks/list")
   .post(authCheck, validateRequest(bookmarkSchema.bookmarksListSchema), getBookmarkList);
-
-//cms management
-router.route("/cms/page/list").get(cmsController.getContentPageList);
-router
-  .route("/cms/page/content")
-  .post(validateRequest(cmsSchema.deleteCmsSchema), cmsController.getPageContent);
 
 //faqs management
 router.route("/faqs/list").get(getFaqsList);
