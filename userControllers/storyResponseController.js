@@ -3,7 +3,7 @@ const { storyModel } = require("../Models/storyModel");
 const storyReactionsModel = require("../Models/storyReactionsModel");
 const { StatusCode } = require("../utils/constants");
 const { ResponseService } = require("../services/responseService");
-const { sendFirebaseNotifications } = require("../firebase/pushNotification");
+const { triggerNotifications } = require("../firebase/pushNotification");
 const { Types } = require("mongoose");
 
 const manageStoryReaction = async (req, res) => {
@@ -100,7 +100,7 @@ const addStoryComment = async (req, res) => {
       tokens: [...(isStoryExist.user.firebaseToken || [])],
     };
 
-    await sendFirebaseNotifications(message);
+    await triggerNotifications(message);
 
     return ResponseService.success(res, "Comment added successfully!", result);
   } catch (error) {

@@ -7,6 +7,7 @@ const configsController = require("../commonControllers/configsController");
 const { updateFirebaseToken } = require("../commonControllers/firebaseController");
 const cmsController = require("../adminControllers/cmsController");
 const { getCategories } = require("../adminControllers/categoryController");
+const { sendFirebaseNotification } = require("../firebase/pushNotification");
 
 router.route("/uploadFiles").post(validateFile, uploadFiles);
 router.route("/categories/list").get(getCategories);
@@ -22,5 +23,10 @@ router
 
 //configs
 router.route("/configs").get(configsController.getConfigs);
+
+//firebase notification
+router
+  .route("/notification/send")
+  .post(validateRequest(firebaseSchema.sendNotification), sendFirebaseNotification);
 
 module.exports = router;

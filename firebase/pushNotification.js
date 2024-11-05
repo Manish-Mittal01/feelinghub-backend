@@ -1,20 +1,52 @@
 const firebaseAdmin = require("firebase-admin");
 const { firebaseServiceAccount: serviceAccount } = require("./config");
+const { ResponseService } = require("../services/responseService");
+const UserModel = require("../Models/UserModel");
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
 });
 
-const sendFirebaseNotifications = async (message = {}) => {
+const triggerNotifications = async (message = {}) => {
   if (!message.notification || message.tokens?.length <= 0) return "";
 
   try {
     const response = await firebaseAdmin.messaging().sendEachForMulticast(message);
-    // console.log("Notification sent:", response);
+
     return response;
   } catch (error) {
     console.error("Error sending notification:", error);
   }
 };
 
-module.exports = { firebase: firebaseAdmin, sendFirebaseNotifications };
+const sendFirebaseNotification = async (req, res) => {
+  try {
+    const { title, body } = req.body;
+
+    const allUsers = await UserModel.find({}).select("firebaseToken");
+
+    let tokens = [];
+    for await (let user of allUsers) {
+      tokens.push(...(user.firebaseToken || []));
+    }
+
+    const topicResponse = await firebaseAdmin
+      .messaging()
+      .subscribeToTopic(tokens.filter(Boolean), "allUsersMessage");
+
+    const message = {
+      notification: { title, body },
+      webpush: { fcmOptions: { link: process.env.WEB_HOME_URL } },
+      topic: "allUsers",
+    };
+
+    const response = await firebaseAdmin.messaging().send(message);
+
+    return ResponseService.success(res, "Notification sent", topicResponse);
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    return ResponseService.serverError(res, error);
+  }
+};
+
+module.exports = { firebase: firebaseAdmin, triggerNotifications, sendFirebaseNotification };

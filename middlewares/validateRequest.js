@@ -375,6 +375,12 @@ module.exports = {
         firebaseToken: Joi.string().required(),
       })
       .unknown(true),
+    sendNotification: Joi.object()
+      .keys({
+        title: Joi.string().required(),
+        body: Joi.string().required(),
+      })
+      .unknown(true),
   },
   cmsSchema: {
     addCmsSchema: Joi.object()
