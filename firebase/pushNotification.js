@@ -35,7 +35,8 @@ const sendFirebaseNotification = async (req, res) => {
       .subscribeToTopic(tokens.filter(Boolean), "allUsersMessage");
 
     const message = {
-      notification: { title, body },
+      data: { title, body },
+      // notification: { title, body },
       webpush: { fcmOptions: { link: process.env.WEB_HOME_URL } },
       topic: "allUsers",
     };
