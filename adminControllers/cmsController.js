@@ -66,7 +66,7 @@ module.exports.getPageContent = async (req, res) => {
     const { pageId } = req.body;
 
     const pageContent = await contentPagesModel.findOne({ _id: pageId });
-    if (!pageContent) return ResponseService.success(res, "Page not found!!", StatusCode.notFound);
+    if (!pageContent) return ResponseService.failed(res, "Data not found!!", StatusCode.notFound);
 
     return ResponseService.success(res, "Page found successfully", pageContent);
   } catch (error) {
