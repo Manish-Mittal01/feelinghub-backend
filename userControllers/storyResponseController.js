@@ -89,15 +89,15 @@ const addStoryComment = async (req, res) => {
         body: "New comment on your story",
         icon: "https://ui-avatars.com/api/?name=First%20Last",
         tag: `story-comment-${isStoryExist._id}`,
+        click_url: `https://feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action
       },
       webpush: {
-        notification: {
-          // title: isStoryExist?.user?.name,
-          // body: "New comment on your story",
-          // icon: "https://ui-avatars.com/api/?name=First%20Last",
-          // tag: `story-comment-${isStoryExist._id}`,
-          click_action: `https://feelinghub.in/story/${isStoryExist._id}`,
-        },
+        // notification: {
+        //   title: isStoryExist?.user?.name,
+        //   body: "New comment on your story",
+        //   icon: "https://ui-avatars.com/api/?name=First%20Last",
+        //   tag: `story-comment-${isStoryExist._id}`,
+        // },
         fcmOptions: {
           link: `https://feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action
         },
