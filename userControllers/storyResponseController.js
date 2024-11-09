@@ -84,15 +84,12 @@ const addStoryComment = async (req, res) => {
     const result = await newComment.save();
 
     const message = {
-      notification: {
+      data: {
         title: "Hello",
         body: "New comment on your story",
+        icon: "https://ui-avatars.com/api/?name=First%20Last",
       },
       webpush: {
-        notification: {
-          icon: "https://ui-avatars.com/api/?name=First%20Last",
-          // click_action: "https://feelinghub.in", // URL to open on click
-        },
         fcmOptions: {
           link: "https://feelinghub.in", // Works similarly to click_action
         },

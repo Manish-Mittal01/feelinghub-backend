@@ -8,7 +8,7 @@ firebaseAdmin.initializeApp({
 });
 
 const triggerNotifications = async (message = {}) => {
-  if (!message.notification || message.tokens?.length <= 0) return "";
+  if (!message.data || message.tokens?.length <= 0) return "";
 
   try {
     const response = await firebaseAdmin.messaging().sendEachForMulticast(message);
