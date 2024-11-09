@@ -84,6 +84,11 @@ const addStoryComment = async (req, res) => {
     const result = await newComment.save();
 
     const message = {
+      data: {
+        title: isStoryExist?.user?.name,
+        body: "New comment on your story",
+        icon: "https://ui-avatars.com/api/?name=First%20Last",
+      },
       webpush: {
         notification: {
           title: isStoryExist?.user?.name,
