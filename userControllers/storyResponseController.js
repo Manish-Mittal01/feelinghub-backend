@@ -137,7 +137,9 @@ const getCommentsList = async (req, res) => {
           pipeline: [
             {
               $match: {
-                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$reactionType", "like"] },
+                $expr: {
+                  $and: [{ $eq: ["$comment", "$$commentId"] }, { $eq: ["$reactionType", "like"] }],
+                },
               },
             },
             { $count: "count" },
@@ -154,7 +156,9 @@ const getCommentsList = async (req, res) => {
           pipeline: [
             {
               $match: {
-                $expr: { $eq: ["$comment", "$$commentId"], $eq: ["$user", userid] },
+                $expr: {
+                  $and: [{ $eq: ["$comment", "$$commentId"] }, { $eq: ["$user", userid] }],
+                },
                 reactionType: { $exists: true },
               },
             },
