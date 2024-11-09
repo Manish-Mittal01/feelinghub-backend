@@ -84,17 +84,11 @@ const addStoryComment = async (req, res) => {
     const result = await newComment.save();
 
     const message = {
-      data: {
-        title: isStoryExist?.user?.name,
-        body: "New comment on your story",
-        icon: "https://ui-avatars.com/api/?name=First%20Last",
-      },
       webpush: {
         notification: {
           title: isStoryExist?.user?.name,
           body: "New comment on your story",
           icon: "https://ui-avatars.com/api/?name=First%20Last",
-          click_action: `https://feelinghub.in/story/${isStoryExist._id}`,
         },
         fcmOptions: {
           link: `https://feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action

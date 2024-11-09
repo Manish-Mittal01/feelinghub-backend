@@ -8,14 +8,14 @@ firebaseAdmin.initializeApp({
 });
 
 const triggerNotifications = async (message = {}) => {
-  if (!message.data || message.tokens?.length <= 0) return "";
+  if (message.tokens?.length <= 0) return "";
 
   try {
     const response = await firebaseAdmin.messaging().sendEachForMulticast(message);
 
     return response;
   } catch (error) {
-    console.error("Error sending notification:", error);
+    console.error("Error sending notification:", JSON.stringify(error));
   }
 };
 
