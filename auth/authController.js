@@ -177,7 +177,7 @@ const login = async (req, res) => {
     if (loginType === "normal") {
       const isPasswordCorrect = await bcrypt.compare(password, isUserExist.password);
       if (!isPasswordCorrect) {
-        return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
+        return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.badRequest);
       }
       accessToken = isUserExist.generateJWT(isUserExist);
     } else {
