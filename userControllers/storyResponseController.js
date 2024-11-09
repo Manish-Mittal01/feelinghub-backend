@@ -85,13 +85,13 @@ const addStoryComment = async (req, res) => {
 
     const message = {
       data: {
-        title: "Hello",
+        title: isStoryExist?.user?.name,
         body: "New comment on your story",
         icon: "https://ui-avatars.com/api/?name=First%20Last",
       },
       webpush: {
         fcmOptions: {
-          link: "https://feelinghub.in", // Works similarly to click_action
+          link: `https://feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action
         },
       },
       tokens: [...(isStoryExist.user.firebaseToken || [])],
