@@ -6,8 +6,8 @@ const { uploadFiles } = require("../commonControllers/upload-file");
 const configsController = require("../commonControllers/configsController");
 const { updateFirebaseToken } = require("../commonControllers/firebaseController");
 const cmsController = require("../adminControllers/cmsController");
-const { getCategories } = require("../adminControllers/categoryController");
 const { sendFirebaseNotification } = require("../firebase/pushNotification");
+const { getCategories } = require("../commonControllers/categoryController");
 
 router.route("/uploadFiles").post(validateFile, uploadFiles);
 router.route("/categories/list").get(getCategories);

@@ -1,14 +1,14 @@
 const { ResponseService } = require("../services/responseService");
-const { storyCategories } = require("../utils/constants");
 
-module.exports.getCategory = async (req, res) => {
+const getCategories = async (req, res) => {
   try {
-    return ResponseService.success(res, "Categories found!!", {
-      items: storyCategories,
-      totalCount: storyCategories.length || 0,
-    });
+    const categories = await categoryModel.find().lean();
+
+    return ResponseService.success(res, "Categories found!!", categories);
   } catch (error) {
     console.log("error", error);
     return ResponseService.serverError(res, error);
   }
 };
+
+module.exports = { getCategories };

@@ -6,6 +6,15 @@ const categorySchema = Schema(
       type: String,
       required: true,
     },
+    specialName: {
+      type: String,
+      required: true,
+    },
+    isPrimary: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     iconRegular: {
       type: String,
       required: true,

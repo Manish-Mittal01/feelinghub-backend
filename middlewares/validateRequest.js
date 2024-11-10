@@ -6,7 +6,6 @@ const {
   passwordRegex,
   dateRegex,
   StatusCode,
-  storyCategories,
   userStatus,
   storyStatus,
   storyResponseTypes,
@@ -46,6 +45,8 @@ const addStorySchemaKeys = {
 
 const addCategorySchemaKeys = {
   name: Joi.string().required(),
+  specialName: Joi.string().required(),
+  isPrimary: Joi.boolean().required(),
   iconRegular: Joi.string().required(),
   iconFilled: Joi.string().required(),
 };
