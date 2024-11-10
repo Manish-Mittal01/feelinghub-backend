@@ -93,7 +93,7 @@ const addStoryComment = async (req, res) => {
       },
       webpush: {
         fcmOptions: {
-          link: `https://feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action
+          link: `https://www.feelinghub.in/story/${isStoryExist._id}`, // Works similarly to click_action
         },
       },
       collapse_key: `story-comment-${isStoryExist._id}`,
