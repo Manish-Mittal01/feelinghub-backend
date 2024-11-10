@@ -1,3 +1,4 @@
+const categoryModel = require("../Models/categoryModel");
 const { ResponseService } = require("../services/responseService");
 
 const getCategories = async (req, res) => {
