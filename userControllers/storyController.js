@@ -130,10 +130,8 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
       {
-        $project: {
-          viewsCount: {
-            $ifNull: [{ $arrayElemAt: ["$viewsCount.viewsCount", 0] }, 0],
-          },
+        $set: {
+          viewsCount: { $ifNull: [{ $arrayElemAt: ["$viewsCount.viewsCount", 0] }, 0] },
         },
       },
 
