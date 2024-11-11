@@ -8,10 +8,10 @@ const {
   bookmarkSchema,
   commonSchema,
   otherUserProfileSchema,
-  cmsSchema,
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
+const viewController = require("../userControllers/viewsController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const otherUserProfileController = require("../userControllers/otherUserProfileController");
@@ -138,5 +138,11 @@ router
 
 //faqs management
 router.route("/faqs/list").get(getFaqsList);
+
+//story views
+router
+  .route("/story/view/add")
+  .post(validateRequest(storySchemas.storyDetailsSchema), viewController.addStoryView);
+router.route("/watchHistory/list").post(authCheck, viewController.getWatchHistory);
 
 module.exports = router;
