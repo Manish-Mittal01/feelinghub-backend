@@ -25,7 +25,7 @@ module.exports.addStory = async (req, res) => {
 
 module.exports.getStoriesList = async (req, res) => {
   try {
-    const { page, limit, order, orderBy, listType } = req.body;
+    const { page, limit, order, orderBy, listType, user } = req.body;
     let { userid } = req.headers;
     userid = userid ? Types.ObjectId(userid) : null;
 
@@ -38,8 +38,11 @@ module.exports.getStoriesList = async (req, res) => {
       }
     }
 
-    if (listType === "user" || listType === "others") {
+    if (listType === "user") {
       filters.user = userid;
+    } else if (listType === "others") {
+      filters.user = user;
+      filters.isPrivate = false;
     } else if (listType === "main") {
       filters.status = "active";
       filters.isPrivate = false;
