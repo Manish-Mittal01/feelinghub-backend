@@ -107,6 +107,34 @@ module.exports.getStoriesList = async (req, res) => {
         },
       },
 
+      {
+        $lookup: {
+          from: "storyviews",
+          let: { storyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$story", "$$storyId"] }],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                viewsCount: { $sum: "$viewsCount" },
+              },
+            },
+          ],
+          as: "viewsCount",
+        },
+      },
+      {
+        $set: {
+          viewsCount: { $ifNull: [{ $arrayElemAt: ["$viewsCount.viewsCount", 0] }, 0] },
+        },
+      },
+
       { $sort: { [orderBy]: order } },
       { $skip: (page - 1) * limit },
       { $limit: limit },
