@@ -16,6 +16,7 @@ const {
 } = require("../utils/constants");
 
 const validateMongoId = (value, helpers) => {
+  if (!value) return true;
   if (value && Types.ObjectId.isValid(value)) return Types.ObjectId(value);
   return helpers.message(`Invalid ${helpers.state?.path[0]}`);
 };
