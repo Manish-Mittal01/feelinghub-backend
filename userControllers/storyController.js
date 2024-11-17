@@ -211,7 +211,8 @@ module.exports.getStoryDetails = async (req, res) => {
     const { storyId } = req.body;
     const { userid } = req.headers;
 
-    let story = storyModel.findOne({ _id: storyId }).populate("user category").lean();
+    let story = storyModel.findOne({ _id: storyId }).populate("category").lean();
+
     let commentsCount = storyReactionsModel.countDocuments({
       story: storyId,
       comment: { $exists: true },
@@ -239,6 +240,12 @@ module.exports.getStoryDetails = async (req, res) => {
     ]);
 
     if (!story) return ResponseService.success(res, `story not found`, StatusCode.notFound);
+
+    if (!story.anonymousSharing) {
+      await storyModel.populate(story, {
+        path: "user",
+      });
+    }
 
     return ResponseService.success(res, `story details found successfully`, {
       ...story,
