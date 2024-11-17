@@ -213,7 +213,7 @@ module.exports = {
     storyListSchema: Joi.object()
       .keys({
         ...paginationValidation,
-        category: Joi.string().custom(validateMongoId, "CategoryId validation"),
+        category: Joi.string().custom(validateMongoId, "CategoryId validation").allow(""),
         user: Joi.string().custom(validateMongoId, "userId validation"),
         listType: Joi.string().valid("admin", "user", "main", "others").default("main"),
         status: Joi.string().when("listType", {
