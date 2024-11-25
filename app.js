@@ -6,10 +6,17 @@ const authRoutes = require("./routers/authRoutes");
 const adminRoutes = require("./routers/adminRoutes");
 const cors = require("cors");
 const path = require("path");
+const { getCorsOrigin } = require("./utils/helpers");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: getCorsOrigin,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 // app.use(express.static("images"));
 // app.use("/images", express.static(path.join(__dirname, ".", "public/assets")));

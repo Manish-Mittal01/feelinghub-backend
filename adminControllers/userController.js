@@ -37,7 +37,7 @@ module.exports.getAllUsers = async (req, res) => {
     const usersCount = await User.countDocuments(queryObj);
 
     return ResponseService.success(res, "User list found", {
-      items: users,
+      records: users,
       totalCount: usersCount,
     });
   } catch (error) {

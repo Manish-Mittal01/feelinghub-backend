@@ -8,10 +8,12 @@ const {
   bookmarkSchema,
   commonSchema,
   otherUserProfileSchema,
+  chatSchema,
 } = require("../middlewares/validateRequest");
 const storyResponseController = require("../userControllers/storyResponseController");
 const storyController = require("../userControllers/storyController");
 const viewController = require("../userControllers/viewsController");
+const chatController = require("../userControllers/chatController");
 const { addQuery, updateQuery, queriesList } = require("../userControllers/queryController");
 const { manageBookmark, getBookmarkList } = require("../userControllers/bookmarkController");
 const otherUserProfileController = require("../userControllers/otherUserProfileController");
@@ -144,5 +146,11 @@ router
   .route("/story/view/add")
   .post(validateRequest(storySchemas.storyDetailsSchema), viewController.addStoryView);
 router.route("/watchHistory/list").post(authCheck, viewController.getWatchHistory);
+
+// chats
+router.route("/chats/list").post(authCheck, chatController.getChatList);
+router
+  .route("/chat/history")
+  .post(authCheck, validateRequest(chatSchema.chatHistory), chatController.getMessageHistory);
 
 module.exports = router;

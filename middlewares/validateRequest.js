@@ -370,6 +370,24 @@ module.exports = {
     }),
   },
 
+  chatSchema: {
+    chatHistory: Joi.object()
+      .keys({
+        ...paginationValidation,
+        chatId: Joi.string().custom(validateMongoId, "chatId validation").required(),
+      })
+      .unknown(true),
+
+    messageSchema: Joi.object()
+      .keys({
+        message: Joi.string().trim().min(1).required(),
+        chatId: Joi.string().custom(validateMongoId, "chatId validation").optional(),
+        sender: Joi.string().custom(validateMongoId, "senderId validation").required(),
+        receiver: Joi.string().custom(validateMongoId, "receiverId validation").required(),
+      })
+      .unknown(true),
+  },
+
   //////////// utility
   firebaseSchema: {
     updateTokenSchema: Joi.object()
@@ -524,6 +542,25 @@ module.exports = {
         }
       } catch (error) {
         return ResponseService.serverError(res, error);
+      }
+    };
+  },
+
+  validateSocketData: (schema) => {
+    return (data, next) => {
+      try {
+        const result = schema.validate(data, {
+          stripUnknown: true,
+        });
+
+        if (result.error) {
+          return next(new Error(result.error));
+        } else {
+          data = result.value;
+          // next("data validation success");
+        }
+      } catch (error) {
+        return next(new Error(error));
       }
     };
   },

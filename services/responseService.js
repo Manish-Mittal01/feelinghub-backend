@@ -26,4 +26,18 @@ class ResponseService {
   }
 }
 
-module.exports.ResponseService = ResponseService;
+class SocketResponse {
+  static success(cb, message, data = {}) {
+    if (cb) {
+      return cb({ status: true, message, ...data });
+    }
+  }
+
+  static failed(cb, message, data = {}) {
+    if (cb) {
+      return cb({ status: false, message, ...data });
+    }
+  }
+}
+
+module.exports = { ResponseService, SocketResponse };

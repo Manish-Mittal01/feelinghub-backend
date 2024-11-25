@@ -1,6 +1,6 @@
-const app = require("./app");
-const { connectDatabase } = require("./db/config");
 require("dotenv/config");
+const { connectDatabase } = require("./db/config");
+const { handleSockets, server } = require("./sockets/connections");
 
 const main = async () => {
   await connectDatabase().then((db) => {
@@ -12,8 +12,9 @@ const main = async () => {
     db.once("open", () => {
       console.info("Connected to database");
       const port = process.env.PORT || 5000;
-      app.listen(port, () => {
+      server.listen(port, () => {
         console.log(`App is running on ${port}`);
+        handleSockets();
       });
     });
   });
