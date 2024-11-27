@@ -7,6 +7,7 @@ const messages = require("../Models/messages");
 const { validateSocketData, chatSchema } = require("../middlewares/validateRequest");
 const chats = require("../Models/chats");
 const { SocketResponse } = require("../services/responseService");
+const socketConnections = require("../Models/socketConnections");
 
 const server = require("http").Server(app);
 
@@ -57,79 +58,103 @@ const handleSockets = async () => {
     } else {
       next(new Error("Authentication error"));
     }
-  }).on("connection", (socket) => {
-    console.log(`Socket ${socket.id} connected`);
+  }).on("connection", async (socket) => {
+    try {
+      console.log(`Socket ${socket.id} connected`);
 
-    //join user into the socket
-    socket.on("client", ({ userId }, cb) => {
-      if (!userId) return cb ? cb({ status: "failed", message: "userId is required" }) : ""; // create a common service for socket error msg and success msg just like apis
-
-      console.log("client connected", userId);
-      socket.join(userId);
-      return cb ? cb({ status: "success", message: "User joined" }) : "";
-    });
-
-    // create chat and join users to the chat
-    socket.on("joinChat", async ({ senderId, receiverId }, cb) => {
-      console.log(senderId, " joined chat", receiverId);
-      if (!senderId || !receiverId)
-        return SocketResponse.failed(cb, "receiverId and senderId is required");
-
-      const isChatExists = await chats.exists({ users: { $all: [senderId, receiverId] } });
-
-      if (isChatExists) {
-        socket.join(isChatExists._id);
-        return SocketResponse.success(cb, "Chat joined successfully", {
-          chatId: isChatExists._id,
-        });
+      // Save user connection
+      const isConnectionExist = await socketConnections.exists({ user: socket.userId });
+      if (isConnectionExist) {
+        const result = socketConnections.updateOne(
+          { user: socket.userId },
+          { socketId: socket.id }
+        );
       } else {
-        const newChat = new chats({ users: [senderId, receiverId] });
-        const result = await newChat.save();
-        socket.join(result._id);
-        return SocketResponse.success(cb, "Chat created successfully", {
-          chatId: result._id,
-        });
+        const newConnection = new socketConnections({ user: socket.userId, socketId: socket.id });
+        const result = newConnection.save();
       }
-    });
 
-    // send message
-    socket.on(
-      "sendMessage",
-      // validateSocketData(chatSchema.messageSchema),
-      async ({ message, chatId, sender, receiver }, cb) => {
-        const newMessage = new messages({
-          chat: chatId,
-          sender,
-          receiver,
-          message,
-        });
-        const result = await newMessage.save();
-
-        console.log("new message", message);
-
-        socket.in(receiver).emit("newMessage", result);
-        return SocketResponse.success(cb, "Message sent successfully");
-      }
-    );
-
-    // notify when someone come online
-    socket.broadcast.emit("user connected", {
-      user: socket.userId,
-    });
-
-    socket.on("disconnect", () => {
-      console.log(`Socket ${socket.id} disconnected`, socket.handshake.auth);
-
-      socket.leave(socket.userId);
-      // notify when someone goes offline
-      socket.broadcast.emit("user disconnected", {
+      // notify when someone come online
+      socket.broadcast.emit("user connected", {
         user: socket.userId,
       });
-    });
 
-    socket.on("connect_error", (err) => {
-      console.log("socket connnection error", err);
-    });
+      //join user into the socket
+      socket.on("client", ({ userId }, cb) => {
+        if (!userId) return cb ? cb({ status: "failed", message: "userId is required" }) : ""; // create a common service for socket error msg and success msg just like apis
+
+        console.log("client connected", userId);
+        socket.join(userId);
+        return cb ? cb({ status: "success", message: "User joined" }) : "";
+      });
+
+      // create chat and join users to the chat
+      socket.on("joinChat", async ({ senderId, receiverId }, cb) => {
+        console.log(senderId, " joined chat", receiverId);
+        if (!senderId || !receiverId)
+          return SocketResponse.failed(cb, "receiverId and senderId is required");
+
+        const isChatExists = await chats.exists({ users: { $all: [senderId, receiverId] } });
+
+        if (isChatExists) {
+          socket.join(isChatExists._id);
+          return SocketResponse.success(cb, "Chat joined successfully", {
+            chatId: isChatExists._id,
+          });
+        } else {
+          const newChat = new chats({ users: [senderId, receiverId] });
+          const result = await newChat.save();
+          socket.join(result._id);
+          return SocketResponse.success(cb, "Chat created successfully", {
+            chatId: result._id,
+          });
+        }
+      });
+
+      // send message
+      socket.on(
+        "sendMessage",
+        // validateSocketData(chatSchema.messageSchema),
+        async ({ message, chatId, sender, receiver }, cb) => {
+          try {
+            const newMessage = new messages({
+              chat: chatId,
+              sender,
+              receiver,
+              message,
+            });
+            const result = await newMessage.save();
+
+            console.log("new message", message);
+
+            socket.in(receiver).emit("newMessage", result);
+            return SocketResponse.success(cb, "Message sent successfully");
+          } catch (error) {
+            return SocketResponse.failed(
+              cb,
+              error.message || error?.toString() || "Something went wrong"
+            );
+          }
+        }
+      );
+
+      socket.on("disconnect", async () => {
+        console.log(`Socket ${socket.id} disconnected`, socket.handshake.auth);
+
+        socket.leave(socket.userId);
+        // notify when someone goes offline
+        socket.broadcast.emit("user disconnected", {
+          user: socket.userId,
+        });
+        const result = await socketConnections.deleteOne({ user: socket.userId });
+      });
+
+      socket.on("connect_error", async (err) => {
+        console.log("socket connection error", err);
+      });
+    } catch (error) {
+      console.log("error", error);
+    }
   });
 };
 

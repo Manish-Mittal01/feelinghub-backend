@@ -136,7 +136,7 @@ router
   .post(authCheck, validateRequest(bookmarkSchema.manageBookmarkSchema), manageBookmark);
 router
   .route("/bookmarks/list")
-  .post(authCheck, validateRequest(bookmarkSchema.bookmarksListSchema), getBookmarkList);
+  .post(authCheck, validateRequest(commonSchema.paginationSchema), getBookmarkList);
 
 //faqs management
 router.route("/faqs/list").get(getFaqsList);
@@ -148,7 +148,9 @@ router
 router.route("/watchHistory/list").post(authCheck, viewController.getWatchHistory);
 
 // chats
-router.route("/chats/list").post(authCheck, chatController.getChatList);
+router
+  .route("/chats/list")
+  .post(authCheck, validateRequest(commonSchema.paginationSchema), chatController.getChatList);
 router
   .route("/chat/history")
   .post(authCheck, validateRequest(chatSchema.chatHistory), chatController.getMessageHistory);

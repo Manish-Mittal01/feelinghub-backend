@@ -6,10 +6,77 @@ module.exports.getChatList = async (req, res) => {
   try {
     const { page, limit, order, orderBy, userId } = req.body;
 
-    let chatList = chats
-      .find({ users: userId })
-      .sort({ updatedAt: -1 })
-      .populate("users lastMessage");
+    let chatList = chats.aggregate([
+      { $match: { users: userId } },
+      {
+        $lookup: {
+          from: "messages",
+          localField: "lastMessage",
+          foreignField: "_id",
+          as: "lastMessage",
+        },
+      },
+      { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "socket_connections",
+          let: { userIds: "$users" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$user", "$$userIds"],
+                },
+              },
+            },
+          ],
+          as: "isOnline",
+        },
+      },
+
+      {
+        $addFields: {
+          isOnline: {
+            $cond: {
+              if: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$isOnline",
+                      as: "otherUser",
+                      cond: { $ne: ["$$otherUser.user", userId] },
+                    },
+                  },
+                  0,
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "users",
+          foreignField: "_id",
+          as: "users",
+        },
+      },
+      {
+        $sort: { updatedAt: -1 },
+      },
+      {
+        $skip: (page - 1) * limit,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
     let totalCount = chats.countDocuments({ users: userId });
     [chatList, totalCount] = await Promise.all([chatList, totalCount]);
 
@@ -34,6 +101,7 @@ module.exports.getMessageHistory = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("receiver");
+
     let totalCount = messages.countDocuments({ chat: chatId });
     [messageHistory, totalCount] = await Promise.all([messageHistory, totalCount]);
 

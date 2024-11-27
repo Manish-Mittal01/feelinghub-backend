@@ -347,12 +347,6 @@ module.exports = {
         storyId: Joi.string().custom(validateMongoId, "storyId validation").required(),
       })
       .unknown(true),
-
-    bookmarksListSchema: Joi.object()
-      .keys({
-        ...paginationValidation,
-      })
-      .unknown(true),
   },
 
   otherUserProfileSchema: {
@@ -375,6 +369,12 @@ module.exports = {
       .keys({
         ...paginationValidation,
         chatId: Joi.string().custom(validateMongoId, "chatId validation").required(),
+      })
+      .unknown(true),
+
+    chatsList: Joi.object()
+      .keys({
+        ...paginationValidation,
       })
       .unknown(true),
 
