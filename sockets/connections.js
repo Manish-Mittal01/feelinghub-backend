@@ -75,9 +75,7 @@ const handleSockets = async () => {
       }
 
       // notify when someone come online
-      socket.broadcast.emit("user connected", {
-        user: socket.userId,
-      });
+      socket.broadcast.emit("user connected", socket.userId);
 
       //join user into the socket
       socket.on("client", ({ userId }, cb) => {
@@ -143,9 +141,7 @@ const handleSockets = async () => {
 
         socket.leave(socket.userId);
         // notify when someone goes offline
-        socket.broadcast.emit("user disconnected", {
-          user: socket.userId,
-        });
+        socket.broadcast.emit("user disconnected", socket.userId);
         const result = await socketConnections.deleteOne({ user: socket.userId });
       });
 

@@ -167,7 +167,7 @@ const login = async (req, res) => {
     }
 
     if (!isUserExist && loginType === "normal")
-      return ResponseService.failed(res, "User not Found", StatusCode.notFound);
+      return ResponseService.failed(res, "Email not registered", StatusCode.notFound);
     if (isUserExist && isUserExist.status === "blocked")
       return ResponseService.failed(res, "User is blocked", StatusCode.unauthorized);
     if (isUserExist && isUserExist.status === "inactive") {
