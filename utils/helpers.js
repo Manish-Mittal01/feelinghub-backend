@@ -1,4 +1,8 @@
-const allowedOrigins = ["http://localhost:3000", "https://feelinghub.in"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://feelinghub.in",
+  "https://test.feelinghub.in",
+];
 
 const getCorsOrigin = (origin, callback) => {
   if (!origin) return callback(null, true);
