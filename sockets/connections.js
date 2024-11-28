@@ -75,9 +75,7 @@ const handleSockets = async () => {
       }
 
       // notify when someone come online
-      socket.broadcast.emit("user connected", {
-        user: socket.userId,
-      });
+      socket.broadcast.emit("user connected", socket.userId);
 
       //join user into the socket
       socket.on("client", ({ userId }, cb) => {
@@ -138,14 +136,20 @@ const handleSockets = async () => {
         }
       );
 
+      //user typing
+      socket.on("typing", ({ chatId, typingStatus, receiver }, cb) => {
+        socket.in(receiver).emit("typingStatus", { chatId, typingStatus, receiver });
+
+        return SocketResponse.success(cb, "Typing", { chatId, typingStatus, receiver });
+      });
+
+      // user disconnects
       socket.on("disconnect", async () => {
         console.log(`Socket ${socket.id} disconnected`, socket.handshake.auth);
 
         socket.leave(socket.userId);
         // notify when someone goes offline
-        socket.broadcast.emit("user disconnected", {
-          user: socket.userId,
-        });
+        socket.broadcast.emit("user disconnected", socket.userId);
         const result = await socketConnections.deleteOne({ user: socket.userId });
       });
 
