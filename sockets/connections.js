@@ -136,6 +136,14 @@ const handleSockets = async () => {
         }
       );
 
+      //user typing
+      socket.on("typing", ({ chatId, typingStatus, receiver }, cb) => {
+        socket.in(receiver).emit("typingStatus", { chatId, typingStatus, receiver });
+
+        return SocketResponse.success(cb, "Typing", { chatId, typingStatus, receiver });
+      });
+
+      // user disconnects
       socket.on("disconnect", async () => {
         console.log(`Socket ${socket.id} disconnected`, socket.handshake.auth);
 
