@@ -62,18 +62,6 @@ const handleSockets = async () => {
     try {
       console.log(`Socket ${socket.id} connected`);
 
-      // Save user connection
-      const isConnectionExist = await socketConnections.exists({ user: socket.userId });
-      if (isConnectionExist) {
-        const result = socketConnections.updateOne(
-          { user: socket.userId },
-          { socketId: socket.id }
-        );
-      } else {
-        const newConnection = new socketConnections({ user: socket.userId, socketId: socket.id });
-        const result = newConnection.save();
-      }
-
       // notify when someone come online
       socket.broadcast.emit("user connected", socket.userId);
 
@@ -88,22 +76,36 @@ const handleSockets = async () => {
 
       // create chat and join users to the chat
       socket.on("joinChat", async ({ senderId, receiverId }, cb) => {
-        console.log(senderId, " joined chat", receiverId);
-        if (!senderId || !receiverId)
-          return SocketResponse.failed(cb, "receiverId and senderId is required");
+        try {
+          if (!senderId || !receiverId)
+            return SocketResponse.failed(cb, "receiverId and senderId is required");
 
-        const isChatExists = await chats.exists({ users: { $all: [senderId, receiverId] } });
+          let isReceiverOnline = socketConnections.exists({ user: receiverId });
+          let isChatExists = chats.exists({ users: { $all: [senderId, receiverId] } });
 
-        if (isChatExists) {
-          socket.join(isChatExists._id);
-          return SocketResponse.success(cb, "Chat joined successfully", {
-            chatId: isChatExists._id,
-          });
-        } else {
-          const newChat = new chats({ users: [senderId, receiverId] });
-          const result = await newChat.save();
-          socket.join(result._id);
-          return SocketResponse.success(cb, "Chat created successfully", {
+          [isReceiverOnline, isChatExists] = await Promise.all([isReceiverOnline, isChatExists]);
+
+          if (isChatExists) {
+            socket.join(JSON.stringify(isChatExists._id));
+            console.log("joined chat", JSON.stringify(isChatExists._id));
+
+            return SocketResponse.success(cb, "Chat joined successfully", {
+              chatId: isChatExists._id,
+              isOnline: isReceiverOnline, // is receiver online
+            });
+          } else {
+            const newChat = new chats({ users: [senderId, receiverId] });
+            const result = await newChat.save();
+            socket.join(JSON.stringify(result._id));
+            console.log("joined chat", JSON.stringify(result._id));
+
+            return SocketResponse.success(cb, "Chat created successfully", {
+              chatId: result._id,
+              isOnline: isReceiverOnline, // is receiver online
+            });
+          }
+        } catch (error) {
+          return SocketResponse.failed(cb, error, {
             chatId: result._id,
           });
         }
@@ -138,9 +140,10 @@ const handleSockets = async () => {
 
       //user typing
       socket.on("typing", ({ chatId, typingStatus, receiver }, cb) => {
-        socket.in(receiver).emit("typingStatus", { chatId, typingStatus, receiver });
+        console.log("typing", typingStatus);
+        socket.in(receiver).emit("typing", { typingStatus });
 
-        return SocketResponse.success(cb, "Typing", { chatId, typingStatus, receiver });
+        // return SocketResponse.success(cb, "Typing", { chatId, typingStatus, receiver });
       });
 
       // user disconnects
@@ -156,6 +159,18 @@ const handleSockets = async () => {
       socket.on("connect_error", async (err) => {
         console.log("socket connection error", err);
       });
+
+      // Save user connection
+      const isConnectionExist = await socketConnections.exists({ user: socket.userId });
+      if (isConnectionExist) {
+        const result = socketConnections.updateOne(
+          { user: socket.userId },
+          { socketId: socket.id }
+        );
+      } else {
+        const newConnection = new socketConnections({ user: socket.userId, socketId: socket.id });
+        const result = newConnection.save();
+      }
     } catch (error) {
       console.log("error", error);
     }

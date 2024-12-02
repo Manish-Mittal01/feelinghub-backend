@@ -33,9 +33,13 @@ class SocketResponse {
     }
   }
 
-  static failed(cb, message, data = {}) {
+  static failed(cb, error, data = {}) {
     if (cb) {
-      return cb({ status: false, message, ...data });
+      return cb({
+        status: false,
+        message: error?.message || error || "Internal server error",
+        ...data,
+      });
     }
   }
 }
