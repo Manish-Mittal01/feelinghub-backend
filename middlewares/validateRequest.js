@@ -375,6 +375,7 @@ module.exports = {
     chatsList: Joi.object()
       .keys({
         ...paginationValidation,
+        search: Joi.string().optional(),
       })
       .unknown(true),
 

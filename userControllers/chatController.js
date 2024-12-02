@@ -4,7 +4,7 @@ const messages = require("../Models/messages");
 
 module.exports.getChatList = async (req, res) => {
   try {
-    const { page, limit, order, orderBy, userId } = req.body;
+    const { page, limit, order, orderBy, search, userId } = req.body;
 
     let chatList = chats.aggregate([
       { $match: { users: userId } },
@@ -19,62 +19,47 @@ module.exports.getChatList = async (req, res) => {
       { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
 
       {
-        $lookup: {
-          from: "socket_connections",
-          let: { userIds: "$users" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $in: ["$user", "$$userIds"],
-                },
-              },
-            },
-          ],
-          as: "isOnline",
-        },
-      },
-
-      {
         $addFields: {
-          isOnline: {
-            $cond: {
-              if: {
-                $arrayElemAt: [
-                  {
-                    $filter: {
-                      input: "$isOnline",
-                      as: "otherUser",
-                      cond: { $ne: ["$$otherUser.user", userId] },
-                    },
-                  },
-                  0,
-                ],
-              },
-              then: true,
-              else: false,
+          otherUser: {
+            $filter: {
+              input: "$users",
+              as: "otherUser",
+              cond: { $ne: ["$$otherUser", userId] },
             },
           },
         },
       },
+      { $unwind: { path: "$otherUser", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "socket_connections",
+          let: { otherUserId: "$otherUser" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$user", "$$otherUserId"] } } },
+            { $project: { _id: 1 } },
+          ],
+          as: "isOnline",
+        },
+      },
+      { $unwind: { path: "$isOnline", preserveNullAndEmptyArrays: true } },
 
       {
         $lookup: {
           from: "users",
-          localField: "users",
-          foreignField: "_id",
-          as: "users",
+          let: { otherUserId: "$otherUser" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$otherUserId"] } } },
+            { $project: { name: 1, email: 1, gender: 1, avatar: 1 } },
+          ],
+          as: "otherUser",
         },
       },
-      {
-        $sort: { updatedAt: -1 },
-      },
-      {
-        $skip: (page - 1) * limit,
-      },
-      {
-        $limit: limit,
-      },
+      { $unwind: { path: "$otherUser", preserveNullAndEmptyArrays: true } },
+
+      { $sort: { updatedAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
     ]);
 
     let totalCount = chats.countDocuments({ users: userId });

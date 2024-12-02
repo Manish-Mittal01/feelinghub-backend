@@ -150,7 +150,7 @@ router.route("/watchHistory/list").post(authCheck, viewController.getWatchHistor
 // chats
 router
   .route("/chats/list")
-  .post(authCheck, validateRequest(commonSchema.paginationSchema), chatController.getChatList);
+  .post(authCheck, validateRequest(chatSchema.chatsList), chatController.getChatList);
 router
   .route("/chat/history")
   .post(authCheck, validateRequest(chatSchema.chatHistory), chatController.getMessageHistory);
