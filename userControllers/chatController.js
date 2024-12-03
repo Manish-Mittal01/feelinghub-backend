@@ -11,8 +11,11 @@ module.exports.getChatList = async (req, res) => {
       {
         $lookup: {
           from: "messages",
-          localField: "lastMessage",
-          foreignField: "_id",
+          let: { lastMessage: "$lastMessage" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$lastMessage"] } } },
+            { $project: { message: 1, createdAt: 1, updatedAt: 1 } },
+          ],
           as: "lastMessage",
         },
       },
@@ -50,7 +53,7 @@ module.exports.getChatList = async (req, res) => {
           let: { otherUserId: "$otherUser" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$otherUserId"] } } },
-            { $project: { name: 1, email: 1, gender: 1, avatar: 1 } },
+            { $project: { name: 1, email: 1, gender: 1, avatar: 1, bio: 1 } },
           ],
           as: "otherUser",
         },

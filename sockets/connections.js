@@ -117,6 +117,8 @@ const handleSockets = async () => {
         // validateSocketData(chatSchema.messageSchema),
         async ({ message, chatId, sender, receiver }, cb) => {
           try {
+            console.log("new message", message);
+
             const newMessage = new messages({
               chat: chatId,
               sender,
@@ -124,11 +126,11 @@ const handleSockets = async () => {
               message,
             });
             const result = await newMessage.save();
-
-            console.log("new message", message);
-
             socket.in(receiver).emit("newMessage", result);
-            return SocketResponse.success(cb, "Message sent successfully");
+
+            await chats.updateOne({ _id: chatId }, { lastMessage: result._id });
+
+            return SocketResponse.success(cb, "Message sent successfully", { data: result });
           } catch (error) {
             return SocketResponse.failed(
               cb,
