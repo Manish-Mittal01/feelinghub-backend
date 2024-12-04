@@ -148,6 +148,21 @@ const handleSockets = async () => {
         // return SocketResponse.success(cb, "Typing", { chatId, typingStatus, receiver });
       });
 
+      //block/unblock user
+      socket.on("blockUser", async (data, cb) => {
+        const { chatId, blockedUserId, blockStatus, userId } = data || {};
+        let result = {};
+        if (blockStatus === "block") {
+          result = await chats.updateOne({ _id: chatId }, { $set: { blockedUser: blockedUserId } });
+        } else {
+          result = await chats.updateOne({ _id: chatId }, { $unset: { blockedUser: "" } });
+        }
+
+        socket.in(blockedUserId).emit("blockUser", data);
+
+        return SocketResponse.success(cb, `User ${blockStatus} successfull`);
+      });
+
       // user disconnects
       socket.on("disconnect", async () => {
         console.log(`Socket ${socket.id} disconnected`, socket.handshake.auth);

@@ -7,7 +7,7 @@ const reportedUserModel = require("../Models/reportedUserModel");
 
 module.exports.getAllUsers = async (req, res) => {
   try {
-    const { page, limit, order, orderBy, status, gender, search } = req.body;
+    const { page, limit, order, orderBy, status, gender, search, userId } = req.body;
 
     let queryObj = {};
     if (status) {
@@ -27,7 +27,7 @@ module.exports.getAllUsers = async (req, res) => {
       ];
     }
 
-    let users = await User.find({ ...queryObj })
+    let users = await User.find({ ...queryObj, _id: { $ne: userId } })
       .select("-password")
       .skip((page - 1) * limit)
       .sort({ [orderBy]: order })

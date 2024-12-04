@@ -10,6 +10,10 @@ const chatSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: "messages",
     },
+    blockedUser: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
+    },
   },
   { timestamps: true, versionKey: false }
 );

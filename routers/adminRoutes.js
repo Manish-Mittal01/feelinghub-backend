@@ -4,7 +4,7 @@ const usersController = require("../adminControllers/userController");
 const cmsController = require("../adminControllers/cmsController");
 const faqController = require("../adminControllers/faqController");
 const configController = require("../adminControllers/configsController");
-const { staffCheck } = require("../middlewares/authCheck");
+const { staffCheck, authCheck } = require("../middlewares/authCheck");
 const {
   validateRequest,
   validateRequestParams,
@@ -48,7 +48,7 @@ router
 //users management
 router
   .route("/users/list")
-  .post(staffCheck, validateRequest(usersSchema.usersListSchema), usersController.getAllUsers);
+  .post(authCheck, validateRequest(usersSchema.usersListSchema), usersController.getAllUsers);
 router
   .route("/user/status/update")
   .post(
